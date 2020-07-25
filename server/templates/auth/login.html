@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block body %}
+    <form action="/login" method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.email.label }}
+        {{ form.email }}
+        {{ form.password.label }}
+        {{ form.password }}
+        <button type="submit">Login</button>
+    </form>
+    <div>
+        Don't have an account? Please <a href="/register">register</a>.
+    </div>
+{% endblock %}
