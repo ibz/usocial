@@ -13,6 +13,7 @@ setup(
         'Flask-Script',
         'Flask-WTF',
         'pyjwt',
+        'pytest',
         'wheel',
     ],
 )
