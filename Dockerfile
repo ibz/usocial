@@ -7,11 +7,17 @@ WORKDIR /usr/src/app
 
 RUN mkdir /db
 
-COPY requirements.txt /usr/src/app/
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt setup.py /usr/src/app/
+RUN mkdir /usr/src/app/ureader
+COPY ureader /usr/src/app/ureader
+RUN pip install --no-cache-dir -e .
 
-COPY server/ /usr/src/app
+COPY config.py /usr/src/app/
+RUN mkdir /usr/src/app/instance
+COPY instance/ /usr/src/app/instance
 
 EXPOSE 5000
 
-CMD [ "python", "./run.py" ]
+ENV FLASK_APP=ureader
+
+CMD [ "flask", "run", "--host", "0.0.0.0" ]

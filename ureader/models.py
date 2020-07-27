@@ -1,6 +1,6 @@
 import datetime
 
-from app import app, db, bcrypt
+from ureader import app, db, bcrypt
 
 class User(db.Model):
     __tablename__ = 'users'

@@ -6,13 +6,22 @@
 
 `pip install --upgrade pip`
 
-`pip install -r requirements.txt`
+`pip install -e .`
 
-`SQLALCHEMY_DATABASE_URI=sqlite:///db/app.db python manage.py create_db`
+```
+mkdir instance && cat > instance/config.py << EOF
+SECRET_KEY = 'my-key'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///db/app.db'
+EOF
+```
 
-## Running the app
+`mkdir ureader/db && python manage.py create_db`
 
 `python ./server/run.py`
+
+`export FLASK_APP=ureader`
+
+`flask run`
 
 ## Building the docker container
 

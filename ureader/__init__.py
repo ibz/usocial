@@ -5,11 +5,9 @@ from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
-from config import BaseConfig
-
-app = Flask(__name__)
-
-app.config.from_object(BaseConfig)
+app = Flask(__name__, instance_relative_config=True)
+app.config.from_object('config')
+app.config.from_pyfile('config.py', silent=True)
 
 CORS(app)
 CSRFProtect(app)
@@ -17,3 +15,5 @@ CSRFProtect(app)
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+from ureader import views

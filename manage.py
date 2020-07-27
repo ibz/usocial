@@ -1,7 +1,7 @@
 from flask_script import Manager
 
-from app import app, db
-import models
+from ureader import app, db
+from ureader import models
 
 manager = Manager(app)
 

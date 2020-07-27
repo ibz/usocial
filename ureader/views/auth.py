@@ -1,31 +1,10 @@
-from functools import wraps
-
 from flask import flash, redirect, render_template, request, url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
-from flask_jwt_extended import get_jwt_identity, jwt_refresh_token_required, verify_jwt_in_request
-from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_jwt_extended import get_jwt_identity, jwt_refresh_token_required
 
-from app import app, bcrypt, db, jwt
-from forms import LoginForm, RegisterForm
-from models import User
-
-@jwt.claims_verification_failed_loader
-def no_jwt():
-    return redirect(url_for('login'))
-
-@jwt.expired_token_loader
-def jwt_token_expired():
-    return redirect(url_for('refresh'))
-
-def jwt_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            verify_jwt_in_request()
-        except NoAuthorizationError:
-            return no_jwt()
-        return fn(*args, **kwargs)
-    return wrapper
+from ureader import app, bcrypt, db
+from ureader import forms
+from ureader import models
 
 @app.route('/register', methods=('GET', 'POST'))
 def register():
@@ -40,12 +19,12 @@ def register():
         elif not password:
             error = 'Password is required'
         else:
-            user = User.query.filter_by(email=email).first()
+            user = models.User.query.filter_by(email=email).first()
             if user:
                 error = 'User is already registered'
         if error is None:
             try:
-                user = User(email=email, password=password)
+                user = models.User(email=email, password=password)
                 db.session.add(user)
                 db.session.commit()
                 return redirect(url_for('login'))
@@ -54,7 +33,7 @@ def register():
         flash(error)
         return redirect(url_for('register'))
     else:
-        return render_template('auth/register.html', form=RegisterForm())
+        return render_template('auth/register.html', form=forms.RegisterForm())
 
 @app.route('/login', methods=('GET', 'POST'))
 def login():
@@ -62,7 +41,7 @@ def login():
         return redirect(url_for('index'))
     if request.method == 'POST':
         email = request.form['email']
-        user = User.query.filter_by(email=email).first()
+        user = models.User.query.filter_by(email=email).first()
         if user and bcrypt.check_password_hash(user.password, request.form['password']):
             response = redirect(url_for('index'))
             set_access_cookies(response, create_access_token(identity=email))
@@ -72,7 +51,7 @@ def login():
             flash('Incorrect email or password')
             return redirect(url_for('login'))
     else:
-        return render_template('auth/login.html', form=LoginForm())
+        return render_template('auth/login.html', form=forms.LoginForm())
 
 @app.route('/logout', methods=('GET',))
 def logout():
