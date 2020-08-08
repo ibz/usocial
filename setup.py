@@ -5,6 +5,8 @@ setup(
     packages=['ureader'],
     include_package_data=True,
     install_requires=[
+        'babel',
+        'feedparser',
         'Flask',
         'Flask-Bcrypt',
         'Flask-Cors',

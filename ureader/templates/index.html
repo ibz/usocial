@@ -8,8 +8,8 @@ Hello world, {{ email }}! <a href="/logout">logout</a>
 
 <div>
     <ul>
-        {% for subscription in subscriptions %}
-            <li>{{ subscription.feed.url }}</li>
+        {% for entry in entries %}
+            <li><a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}</li>
         {% endfor %}
     </ul>
 </div>

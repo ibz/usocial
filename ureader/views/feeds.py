@@ -14,7 +14,12 @@ def index():
         return redirect(url_for('login'))
     user = models.User.query.filter_by(email=email).first()
     jwt_csrf_token = request.cookies.get('csrf_access_token')
-    return render_template('index.html', email=email, subscriptions=user.subscriptions, form=forms.SubscribeForm(), jwt_csrf_token=jwt_csrf_token)
+    entries = models.Entry.query \
+        .join(models.Feed) \
+        .join(models.Subscription) \
+        .filter(models.Subscription.user_id==user.id) \
+        .order_by(models.Entry.updated_at.desc())
+    return render_template('index.html', email=email, entries=entries, form=forms.SubscribeForm(), jwt_csrf_token=jwt_csrf_token)
 
 @app.route('/subscribe', methods=('POST',))
 @jwt_required
