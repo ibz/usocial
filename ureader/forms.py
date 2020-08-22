@@ -9,5 +9,5 @@ class LoginForm(FlaskForm):
     email = StringField("Your email")
     password = PasswordField("Your password")
 
-class SubscribeForm(FlaskForm):
+class FollowForm(FlaskForm):
    url = StringField("URL of the feed")

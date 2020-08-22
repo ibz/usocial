@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<table>
+        {% for entry in entries %}
+            <tr><td><a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }} (<a href="#">save</a>) (<a href="#">delete</a>)</td></tr>
+        {% endfor %}
+</table>
+{% endblock %}

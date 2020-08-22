@@ -6,10 +6,14 @@ from ureader import app, bcrypt, db
 from ureader import forms
 from ureader import models
 
+@app.route('/', methods=('GET',))
+def index():
+    return redirect(url_for('feed'))
+
 @app.route('/register', methods=('GET', 'POST'))
 def register():
     if get_jwt_identity():
-        return redirect(url_for('index'))
+        return redirect(url_for('feed'))
     if request.method == 'POST':
         error = None
         email = request.form['email']
@@ -38,12 +42,12 @@ def register():
 @app.route('/login', methods=('GET', 'POST'))
 def login():
     if get_jwt_identity():
-        return redirect(url_for('index'))
+        return redirect(url_for('feed'))
     if request.method == 'POST':
         email = request.form['email']
         user = models.User.query.filter_by(email=email).first()
         if user and bcrypt.check_password_hash(user.password, request.form['password']):
-            response = redirect(url_for('index'))
+            response = redirect(url_for('feed'))
             set_access_cookies(response, create_access_token(identity=email))
             set_refresh_cookies(response, create_refresh_token(identity=email))
             return response
@@ -63,6 +67,6 @@ def logout():
 @jwt_refresh_token_required
 def refresh():
     email = get_jwt_identity()
-    response = redirect(url_for('index'))
+    response = redirect(url_for('feed'))
     set_access_cookies(response, create_access_token(identity=email))
     return response

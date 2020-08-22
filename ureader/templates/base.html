@@ -1,14 +1,45 @@
 <html>
     <body>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <ul class="flashes">
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    {% endwith %}
-    {% block body %}{% endblock %}
+    <center>
+    <table width="85%">
+        <tr id="navbar">
+            <td style="background-color: #C4E38A">
+                <table width="100%">
+                    <tr>
+                    <td width="5%">mureader</td>
+                    <td>
+                        {% if user %}
+                            <a href="/feed">feed</a>
+                            <a href="/subscriptions">subscriptions</a>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        {% if user %}
+                            ({{ user.email }})
+                            <a href="/logout">logout</a>
+                        {% endif %}
+                    </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+        <tr id="flashes">
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+        </tr>
+        <tr class="content">
+            <td>
+            {% block content %}{% endblock %}
+            </td>
+        </tr>
+    </table>
+    </center>
     </body>
 </html>
