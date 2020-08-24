@@ -3,4 +3,4 @@ __pycache__
 *.egg-info
 venv
 instance/
-ureader/db
+mureader/db

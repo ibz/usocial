@@ -8,8 +8,8 @@ WORKDIR /usr/src/app
 RUN mkdir /db
 
 COPY requirements.txt setup.py /usr/src/app/
-RUN mkdir /usr/src/app/ureader
-COPY ureader /usr/src/app/ureader
+RUN mkdir /usr/src/app/mureader
+COPY mureader /usr/src/app/mureader
 RUN pip install --no-cache-dir -e .
 
 COPY config.py /usr/src/app/
@@ -18,6 +18,6 @@ COPY instance/ /usr/src/app/instance
 
 EXPOSE 5000
 
-ENV FLASK_APP=ureader
+ENV FLASK_APP=mureader
 
 CMD [ "flask", "run", "--host", "0.0.0.0" ]

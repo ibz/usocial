@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from ureader import app, db
+from mureader import app, db
 
 @pytest.fixture
 def client():
@@ -30,11 +30,11 @@ def logout(client):
     return client.get('/logout', follow_redirects=True)
 
 def test_login_nouser(client):
-    rv = login(client, 'hello@ureader.com', 'hellopass')
+    rv = login(client, 'hello@mureader.com', 'hellopass')
     assert b'Incorrect email or password' in rv.data
 
 def test_register(client):
-    register(client, 'hello@ureader.com', 'hellopass')
-    rv = login(client, 'hello@ureader.com', 'hellopass')
+    register(client, 'hello@mureader.com', 'hellopass')
+    rv = login(client, 'hello@mureader.com', 'hellopass')
     assert b'Incorrect email or password' not in rv.data
     assert b'Subscribe' in rv.data

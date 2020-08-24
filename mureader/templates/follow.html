@@ -1,13 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<table>
-        {% for subscription in subscriptions %}
-            <tr><td>{{ subscription.feed.title }} (<a href="#">unfollow</a>)</td></tr>
-        {% endfor %}
-</table>
-
 <div>
-    <form action="/follow" method="POST">
+    <form action="" method="POST">
         <input id="jwt_csrf_token" name="jwt_csrf_token" type="hidden" value="{{ jwt_csrf_token }}">
         {{ form.hidden_tag() }}
         {{ form.url.label }}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.email.label }}
+        {{ form.email }}
+        {{ form.token_or_password.label }}
+        {{ form.token_or_password }}
+        <button type="submit">Log in</button>
+    </form>
+    <div>
+        Don't have an account? Please <a href="{{ url_for('user.register') }}">register</a>.
+    </div>
+    <div>
+        Have issues logging in? Please <a href="{{ url_for('user.confirm_email') }}">confirm your email</a>.
+    </div>
+{% endblock %}

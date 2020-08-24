@@ -5,8 +5,8 @@ from time import mktime
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 
-from ureader import db
-from ureader import models
+from mureader import db
+from mureader import models
 
 def parse_feed(url):
     f = feedparser.parse(url)
@@ -37,15 +37,23 @@ def fetch_feed(feed):
     feed.title = f['title']
     feed.updated_at = f['updated_at']
     feed.fetched_at = datetime.now()
+    new_entries = []
     for e in f['entries']:
         entry = models.Entry.query.filter_by(url=e['url']).first()
         if not entry:
             entry = models.Entry(feed_id=feed.id, url=e['url'])
+            new_entries.append(entry)
         entry.title = e['title']
         entry.updated_at = e['updated_at']
         db.session.add(entry)
     db.session.add(feed)
     db.session.commit()
+    if new_entries:
+        for user in models.User.query.join(models.Subscription).join(models.Feed).filter(models.Subscription.feed == feed):
+            print("Adding %s new entries to %s" % (len(new_entries), user.email))
+            for entry in new_entries:
+                db.session.add(models.UserEntry(user=user, entry=entry))
+                db.session.commit()
 
 def main():
     for feed in models.Feed.query.all():

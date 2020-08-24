@@ -1,24 +1,49 @@
+import base64
 from datetime import datetime
+import os
 from urllib.parse import urlparse
 
 from babel.dates import format_timedelta
+import onetimepass
 
-from ureader import app, db, bcrypt
+from mureader import app, db, bcrypt
 
 class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
+    email_confirmed = db.Column(db.Boolean, nullable=False, default=False)
+    username = db.Column(db.String(255), unique=True)
+    otp_secret = db.Column(db.String(16))
+    password = db.Column(db.String(255))
     registered_on = db.Column(db.DateTime, nullable=False)
 
     subscriptions = db.relationship('Subscription')
 
-    def __init__(self, email, password):
+    def __init__(self, email):
         self.email = email
-        self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        self.otp_secret = base64.b32encode(os.urandom(10)).decode('utf-8')
         self.registered_on = datetime.now()
+
+    @property
+    def display_name(self):
+        return self.username or self.email
+
+    def set_password(self, password):
+        self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+
+    def get_totp_uri(self):
+        return 'otpauth://totp/mureader:{0}?secret={1}&issuer=mureader'.format(self.email, self.otp_secret)
+
+    def verify_totp(self, token):
+        return onetimepass.valid_totp(token, self.otp_secret)
+
+    def verify_password(self, password):
+        if not self.password:
+            app.logger.info('No password set for user: %s', self.email)
+            return False
+        return bcrypt.check_password_hash(self.password, password)
 
 class Feed(db.Model):
     __tablename__ = 'feeds'
@@ -55,3 +80,12 @@ class Entry(db.Model):
     @property
     def relative_date(self):
         return format_timedelta(self.updated_at - datetime.now(), add_direction=True)
+
+class UserEntry(db.Model):
+    __tablename__ = 'user_entries'
+
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id), primary_key=True)
+    user = db.relationship(User)
+    entry_id = db.Column(db.Integer, db.ForeignKey(Entry.id), primary_key=True)
+    entry = db.relationship(Entry)
+    liked = db.Column(db.Boolean, nullable=False, default=False)

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+    {% if success %}
+        <p>Success! Please confirm your email in order to continue!</p>
+    {% else %}
+        <form method="POST">
+            {{ form.hidden_tag() }}
+            {{ form.email.label }}
+            {{ form.email }}
+            <button type="submit">Register</button>
+        </form>
+        <div>
+            Already have an account? Please <a href="{{ url_for('user.login') }}">log in</a>.
+        </div>
+    {% endif %}
+{% endblock %}

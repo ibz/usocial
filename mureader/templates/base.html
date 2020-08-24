@@ -9,14 +9,16 @@
                     <td width="5%">mureader</td>
                     <td>
                         {% if user %}
-                            <a href="/feed">feed</a>
+                            <a href="/news">news</a> |
+                            <a href="#">liked</a> |
                             <a href="/subscriptions">subscriptions</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
                         {% if user %}
-                            ({{ user.email }})
-                            <a href="/logout">logout</a>
+                            {{ user.display_name }} | <a href="{{ url_for('user.logout') }}">log out</a>
+                        {% else %}
+                            <a href="{{ url_for('user.login') }}">log in</a>
                         {% endif %}
                     </td>
                     </tr>
@@ -24,6 +26,7 @@
             </td>
         </tr>
         <tr id="flashes">
+            <td>
             {% with messages = get_flashed_messages() %}
             {% if messages %}
             <ul class="flashes">
@@ -33,6 +36,7 @@
             </ul>
             {% endif %}
             {% endwith %}
+            </td>
         </tr>
         <tr class="content">
             <td>
