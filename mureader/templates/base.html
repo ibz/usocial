@@ -120,7 +120,8 @@
                     </td>
                     <td style="text-align: right;">
                         {% if user %}
-                            {{ user.display_name }} | <a href="{{ url_for('user.logout') }}">log out</a>
+                            <a href="{{ url_for('user.me') }}">{{ user.display_name }}</a> |
+                            <a href="{{ url_for('user.logout') }}">log out</a>
                         {% else %}
                             <a href="{{ url_for('user.login') }}">log in</a>
                         {% endif %}

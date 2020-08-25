@@ -2,8 +2,8 @@
 {% block content %}
     <form method="POST">
         {{ form.hidden_tag() }}
-        {{ form.email.label }}
-        {{ form.email }}
+        {{ form.email_or_username.label }}
+        {{ form.email_or_username }}
         {{ form.token_or_password.label }}
         {{ form.token_or_password }}
         <button type="submit">Log in</button>
