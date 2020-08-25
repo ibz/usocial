@@ -5,7 +5,7 @@
             {% if entry.user_id %}
                 {% set user_entry = entry %}
                 {% set entry = user_entry.entry %}
-                <tr><td id="entry-{{ entry.id }}" class="entry-not-deleted {% if user_entry.liked %}entry-liked{% else %}entry-not-liked{% endif %}">
+                <tr><td id="entry-{{ entry.id }}" class="entry-deleted-0 entry-liked-{% if user_entry.liked %}1{% else %}0{% endif %}">
                     <a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}
                     <span class="unlike-link">
                         (<a onclick="likeEntry({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unlike</a>)

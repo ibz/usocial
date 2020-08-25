@@ -1,46 +1,46 @@
 <html>
     <head>
         <style type="text/css">
-            .entry-liked.entry-not-deleted {
+            .entry-liked-1.entry-deleted-0 {
                 background-color: #00AA00;
             }
-            .entry-deleted {
+            .entry-deleted-1 {
                 background-color: #AA0000;
             }
-            .entry-liked .like-link {
+            .entry-liked-1 .like-link {
                 display: none;
             }
-            .entry-not-liked .like-link {
+            .entry-liked-0 .like-link {
                 display: inline;
             }
-            .entry-liked .unlike-link {
+            .entry-liked-1 .unlike-link {
                 display: inline;
             }
-            .entry-not-liked .unlike-link {
+            .entry-liked-0 .unlike-link {
                 display: none;
             }
-            .entry-deleted .delete-link {
+            .entry-deleted-1 .delete-link {
                 display: none;
             }
-            .entry-not-deleted .delete-link {
+            .entry-deleted-0 .delete-link {
                 display: inline;
             }
-            .entry-deleted .undelete-link {
+            .entry-deleted-1 .undelete-link {
                 display: inline;
             }
-            .entry-not-deleted .undelete-link {
+            .entry-deleted-0 .undelete-link {
                 display: none;
             }
-            .feed-followed .follow-link {
+            .feed-followed-1 .follow-link {
                 display: none;
             }
-            .feed-not-followed .follow-link {
+            .feed-followed-0 .follow-link {
                 display: inline;
             }
-            .feed-followed .unfollow-link {
+            .feed-followed-1 .unfollow-link {
                 display: inline;
             }
-            .feed-not-followed .unfollow-link {
+            .feed-followed-0 .unfollow-link {
                 display: none;
             }
         </style>
@@ -52,17 +52,12 @@
                 return parts.pop().split(';').shift();
             }
         }
-        function addClass(eId, c) {
+        function replaceClass(eId, cOld, cNew) {
             var e = document.getElementById(eId);
-            if (!e.classList.contains(c)) {
-                e.classList.add(c);
+            if (e.classList.contains(cOld)) {
+                e.classList.remove(cOld);
             }
-        }
-        function removeClass(eId, c) {
-            var e = document.getElementById(eId);
-            if (e.classList.contains(c)) {
-                e.classList.remove(c);
-            }
+            e.classList.add(cNew);
         }
         function doPost(url, data, csrf_token, successCB) {
             var xhr = new XMLHttpRequest();
@@ -84,39 +79,21 @@
         function likeEntry(entry_id, value, csrf_token) {
             doPost("{{ url_for('like') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
                 function() {
-                    if (value) {
-                        addClass(`entry-${entry_id}`, 'entry-liked');
-                        removeClass(`entry-${entry_id}`, 'entry-not-liked');
-                    } else {
-                        addClass(`entry-${entry_id}`, 'entry-not-liked');
-                        removeClass(`entry-${entry_id}`, 'entry-liked');
-                    }
+                    replaceClass(`entry-${entry_id}`, `entry-liked-${1-value}`, `entry-liked-${value}`);
                 }
             );
         }
         function deleteEntry(entry_id, value, csrf_token) {
             doPost("{{ url_for('delete') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
                 function() {
-                    if (value) {
-                        addClass(`entry-${entry_id}`, 'entry-deleted');
-                        removeClass(`entry-${entry_id}`, 'entry-not-deleted');
-                    } else {
-                        addClass(`entry-${entry_id}`, 'entry-not-deleted');
-                        removeClass(`entry-${entry_id}`, 'entry-deleted');
-                    }
+                    replaceClass(`entry-${entry_id}`, `entry-deleted-${1-value}`, `entry-deleted-${value}`);
                 }
             );
         }
         function followFeed(feed_id, value, csrf_token) {
             doPost("{{ url_for('follow') }}", `feed_id=${feed_id}&value=${value}`, csrf_token,
                 function() {
-                    if (value) {
-                        addClass(`feed-${feed_id}`, 'feed-followed');
-                        removeClass(`feed-${feed_id}`, 'feed-not-followed');
-                    } else {
-                        addClass(`feed-${feed_id}`, 'feed-not-followed');
-                        removeClass(`feed-${feed_id}`, 'feed-followed');
-                    }
+                    replaceClass(`feed-${feed_id}`, `feed-followed-${1-value}`, `feed-followed-${value}`);
                 }
             );
         }
