@@ -5,15 +5,20 @@
             {% if entry.user_id %}
                 {% set user_entry = entry %}
                 {% set entry = user_entry.entry %}
-                <tr><td id="entry-{{ entry.id }}" style="{% if user_entry.liked %}background-color: #00AA00; {% endif %}">
+                <tr><td id="entry-{{ entry.id }}" class="entry-not-deleted {% if user_entry.liked %}entry-liked{% else %}entry-not-liked{% endif %}">
                     <a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}
-                    <span id="unlike-link-{{ entry.id }}" style="display: {% if user_entry.liked %}inline{% else %}none{% endif %};">
-                        (<a onclick="like({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="" >unlike</a>)
+                    <span class="unlike-link">
+                        (<a onclick="likeEntry({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unlike</a>)
                     </span>
-                    <span id="like-link-{{ entry.id }}" style="display: {% if user_entry.liked %}none{% else %}inline{% endif %};">
-                        (<a onclick="like({{ entry.id }}, 1, '{{ csrf_token() }}'); return false;" href="">like</a>)
+                    <span class="like-link">
+                        (<a onclick="likeEntry({{ entry.id }}, 1, '{{ csrf_token() }}'); return false;" href="">like</a>)
                     </span>
-                    (<a href="#">delete</a>)
+                    <span class="undelete-link">
+                        (<a onclick="deleteEntry({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="">undelete</a>)
+                    </span>
+                    <span class="delete-link">
+                        (<a onclick="deleteEntry({{ entry.id }}, 1, '{{ csrf_token() }}'); return false;" href="">delete</a>)
+                    </span>
                 </td></tr>
             {% else %}
                 <tr><td id="entry-{{ entry.id }}">

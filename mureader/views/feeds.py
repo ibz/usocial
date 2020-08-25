@@ -58,19 +58,49 @@ def like():
     db.session.commit()
     return jsonify(ok=True)
 
+@app.route('/delete', methods=['POST'])
+@jwt_required
+def delete():
+    email = get_jwt_identity()
+    user = models.User.query.filter_by(email=email).first()
+    entry_id = request.form['entry_id']
+    if bool(int(request.form['value'])):
+        models.UserEntry.query.filter_by(user_id=user.id, entry_id=entry_id).delete()
+    else:
+        db.session.add(models.UserEntry(user_id=user.id, entry_id=entry_id))
+    db.session.commit()
+    return jsonify(ok=True)
+
 @app.route('/subscriptions', methods=['GET'])
 @jwt_required
 def subscriptions():
     email = get_jwt_identity()
     user = models.User.query.filter_by(email=email).first()
-    subscriptions = models.Subscription.query.filter(models.Subscription.user_id==user.id)
+    subscribed_feed_ids = {s.feed_id for s in models.Subscription.query.filter_by(user_id=user.id)}
+    feeds = [f for f in models.Feed.query.all()]
+    for f in feeds:
+        if f.id in subscribed_feed_ids:
+            f.subscribed = True
     return render_template('subscriptions.html',
-        subscriptions=subscriptions, user=user,
+        feeds=feeds, user=user,
         form=forms.FollowWebsiteForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
-@app.route('/follow', defaults={}, methods=['POST'])
+@app.route('/follow', methods=['POST'])
 @jwt_required
 def follow():
+    email = get_jwt_identity()
+    user = models.User.query.filter_by(email=email).first()
+    feed_id = request.form['feed_id']
+    if not bool(int(request.form['value'])):
+        models.Subscription.query.filter_by(user_id=user.id, feed_id=feed_id).delete()
+    else:
+        db.session.add(models.Subscription(user_id=user.id, feed_id=feed_id))
+    db.session.commit()
+    return jsonify(ok=True)
+
+@app.route('/follow-website', methods=['POST'])
+@jwt_required
+def follow_website():
     email = get_jwt_identity()
     user = models.User.query.filter_by(email=email).first()
 
