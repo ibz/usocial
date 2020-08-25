@@ -80,6 +80,9 @@
             doPost("{{ url_for('like') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
                 function() {
                     replaceClass(`entry-${entry_id}`, `entry-liked-${1-value}`, `entry-liked-${value}`);
+                    if (value) {
+                        replaceClass(`entry-${entry_id}`, `entry-deleted-1`, `entry-deleted-0`);
+                    }
                 }
             );
         }

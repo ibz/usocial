@@ -51,9 +51,13 @@ def like():
     user = models.User.query.filter_by(email=email).first()
     entry_id = request.form['entry_id']
     user_entry = models.UserEntry.query.filter_by(user_id=user.id, entry_id=entry_id).first()
-    if not user_entry: # you could like an entry that is not in your feed (if you see it in somebody else's feed)
-        user_entry = models.UserEntry(user_id=user.id, entry_id=entry_id)
-    user_entry.liked = bool(int(request.form['value']))
+    liked = bool(int(request.form['value']))
+    if not user_entry:
+        if liked: # you could like an entry that is not in your feed (if you see it in somebody else's feed)
+            user_entry = models.UserEntry(user_id=user.id, entry_id=entry_id)
+        else: # unliking a missing item should simply be ignored
+            return jsonify(ok=True)
+    user_entry.liked = liked
     db.session.add(user_entry)
     db.session.commit()
     return jsonify(ok=True)
