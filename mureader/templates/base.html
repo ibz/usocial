@@ -94,7 +94,8 @@
             );
         }
         function followFeed(feed_id, value, csrf_token) {
-            doPost("{{ url_for('follow') }}", `feed_id=${feed_id}&value=${value}`, csrf_token,
+            var affect_news = confirm(value ? "Do you want to also import old entries into your news feed?" : "Do you want to also delete existing entries from your news feed (liked entries will not be deleted)?") ? 1 : 0;
+            doPost("{{ url_for('follow') }}", `feed_id=${feed_id}&value=${value}&affect_news=${affect_news}`, csrf_token,
                 function() {
                     replaceClass(`feed-${feed_id}`, `feed-followed-${1-value}`, `feed-followed-${value}`);
                 }

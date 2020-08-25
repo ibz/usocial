@@ -95,10 +95,21 @@ def follow():
     email = get_jwt_identity()
     user = models.User.query.filter_by(email=email).first()
     feed_id = request.form['feed_id']
+    affect_news = bool(int(request.form['affect_news']))
     if not bool(int(request.form['value'])):
         models.Subscription.query.filter_by(user_id=user.id, feed_id=feed_id).delete()
+        if affect_news:
+            for ue in models.UserEntry.query \
+                .join(models.Entry) \
+                .filter(models.UserEntry.user_id==user.id, models.UserEntry.liked==False, models.Entry.feed_id==feed_id):
+                db.session.delete(ue)
     else:
         db.session.add(models.Subscription(user_id=user.id, feed_id=feed_id))
+        if affect_news:
+            existing_entry_ids = {ue.entry_id for ue in models.UserEntry.query.join(models.Entry).filter(models.UserEntry.user_id==user.id, models.Entry.feed_id==feed_id)}
+            for entry in models.Feed.query.filter_by(id=feed_id).first().entries:
+                if entry.id not in existing_entry_ids:
+                    db.session.add(models.UserEntry(user=user, entry=entry))
     db.session.commit()
     return jsonify(ok=True)
 

@@ -53,7 +53,7 @@ def fetch_feed(feed):
             print("Adding %s new entries to %s" % (len(new_entries), user.email))
             for entry in new_entries:
                 db.session.add(models.UserEntry(user=user, entry=entry))
-                db.session.commit()
+            db.session.commit()
 
 def main():
     for feed in models.Feed.query.all():
