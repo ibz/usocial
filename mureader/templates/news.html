@@ -2,7 +2,24 @@
 {% block content %}
 <table>
         {% for entry in entries %}
-            <tr><td><a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}{% if user %} (<a href="#">like</a>) (<a href="#">delete</a>){% endif %}</td></tr>
+            {% if entry.user_id %}
+                {% set user_entry = entry %}
+                {% set entry = user_entry.entry %}
+                <tr><td id="entry-{{ entry.id }}" style="{% if user_entry.liked %}background-color: #00AA00; {% endif %}">
+                    <a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}
+                    <span id="unlike-link-{{ entry.id }}" style="display: {% if user_entry.liked %}inline{% else %}none{% endif %};">
+                        (<a onclick="like({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="" >unlike</a>)
+                    </span>
+                    <span id="like-link-{{ entry.id }}" style="display: {% if user_entry.liked %}none{% else %}inline{% endif %};">
+                        (<a onclick="like({{ entry.id }}, 1, '{{ csrf_token() }}'); return false;" href="">like</a>)
+                    </span>
+                    (<a href="#">delete</a>)
+                </td></tr>
+            {% else %}
+                <tr><td id="entry-{{ entry.id }}">
+                    <a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}
+                </td></tr>
+            {% endif %}
         {% endfor %}
 </table>
 {% endblock %}

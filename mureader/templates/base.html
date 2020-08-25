@@ -1,4 +1,41 @@
 <html>
+    <head>
+        <script type="text/javascript">
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+        }
+        function doPost(url, data, csrf_token, successCB) {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState == 4 && xhr.status == 200)
+                {
+                    var resp = JSON.parse(xhr.responseText);
+                    if (resp.ok) {
+                        successCB();
+                    }
+                }
+            }
+            xhr.open('POST', url);
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            var token = getCookie('csrf_access_token');
+            xhr.send(`${data}&csrf_token=${csrf_token}&jwt_csrf_token=${token}`);
+            return false;
+        }
+        function like(entry_id, value, csrf_token) {
+            doPost("{{ url_for('like') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
+                function() {
+                    document.getElementById(`entry-${entry_id}`).style = value ? "background-color: #00AA00;" : "";
+                    document.getElementById(`like-link-${entry_id}`).style = value ? "display: none;" : "display: inline;";
+                    document.getElementById(`unlike-link-${entry_id}`).style = value ? "display: inline;" : "display: none;";
+                }
+            );
+        }
+        </script>
+    </head>
     <body>
     <center>
     <table width="85%">
@@ -9,9 +46,9 @@
                     <td width="5%">mureader</td>
                     <td>
                         {% if user %}
-                            <a href="/news">news</a> |
-                            <a href="#">liked</a> |
-                            <a href="/subscriptions">subscriptions</a>
+                            <a href="{{ url_for('news') }}">news</a> |
+                            <a href="{{ url_for('liked') }}">liked</a> |
+                            <a href="{{ url_for('subscriptions') }}">subscriptions</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
