@@ -3,7 +3,7 @@ import tempfile
 
 import pytest
 
-from mureader import app, db
+from mureader.main import app, db
 
 @pytest.fixture
 def client():

@@ -1,23 +1,17 @@
-FROM python:3-alpine
+FROM tiangolo/uwsgi-nginx-flask:python3.6
 
-RUN apk add build-base libffi-dev openssl-dev
+COPY requirements.txt /tmp/
+RUN pip install -U pip
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+COPY ./mureader /app
+COPY setup.py /tmp/
+RUN ln -s /app /tmp/mureader
 
-RUN mkdir /db
+RUN pip install --no-cache-dir -e /tmp/
 
-COPY requirements.txt setup.py /usr/src/app/
-RUN mkdir /usr/src/app/mureader
-COPY mureader /usr/src/app/mureader
-RUN pip install --no-cache-dir -e .
+COPY config.py /app/
+RUN mkdir /app/instance
+COPY instance/ /app/instance
 
-COPY config.py /usr/src/app/
-RUN mkdir /usr/src/app/instance
-COPY instance/ /usr/src/app/instance
-
-EXPOSE 5000
-
-ENV FLASK_APP=mureader
-
-CMD [ "flask", "run", "--host", "0.0.0.0" ]
+VOLUME ["/db"]

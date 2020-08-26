@@ -4,8 +4,8 @@ from flask import redirect, url_for
 from flask_jwt_extended import verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
 
-from mureader import jwt
 from mureader import models
+from mureader.main import jwt
 
 @jwt.claims_verification_failed_loader
 def no_jwt():

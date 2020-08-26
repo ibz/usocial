@@ -1,27 +1,12 @@
 from setuptools import setup
 
+requirements = None
+with open('requirements.txt', 'r') as r:
+    requirements = [l.strip() for l in r.readlines()]
+
 setup(
     name='mureader',
     packages=['mureader'],
     include_package_data=True,
-    install_requires=[
-        'babel',
-        'bs4',
-        'feedparser',
-        'Flask',
-        'Flask-Bcrypt',
-        'Flask-Cors',
-        'Flask-JWT-Extended',
-        'Flask-Mail',
-        'Flask-Migrate',
-        'Flask-Script',
-        'Flask-WTF',
-        'itsdangerous',
-        'onetimepass',
-        'pyjwt',
-        'pytest',
-        'pyqrcode',
-        'requests',
-        'wheel',
-    ],
+    install_requires=requirements,
 )

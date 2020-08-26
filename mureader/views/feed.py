@@ -4,13 +4,11 @@ from flask_jwt_extended import current_user, get_jwt_identity, verify_jwt_in_req
 from flask_jwt_extended.exceptions import NoAuthorizationError
 import requests
 
-from mureader import db
-from mureader import forms
-from mureader import models
+from mureader import forms, models
+from mureader.main import db
 from mureader.views.utils import jwt_required
 
 feed_blueprint = Blueprint('feed', __name__)
-
 
 @feed_blueprint.route('/news', methods=['GET'])
 def news():

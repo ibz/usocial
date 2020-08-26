@@ -27,8 +27,8 @@ EOF
 
 ## Building the docker container
 
-`docker build -t ibz/mureader .`
+`docker build -t ibz0/mureader .`
 
 ## Running the app in docker
 
-`docker run --rm -it -v $(pwd)/server/db:/db -p 5000:5000 ibz/mureader`
+`docker run -d -p 8080:80 -v $(pwd)/mureader/db:/db -t ibz0/mureader`

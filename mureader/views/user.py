@@ -8,13 +8,11 @@ from itsdangerous import URLSafeTimedSerializer
 import pyqrcode
 from sqlalchemy.exc import IntegrityError
 
-from mureader import app, db, mail
-from mureader import forms
-from mureader import models
+from mureader import forms, models
+from mureader.main import app, db, mail
 from mureader.views.utils import jwt_required
 
 user_blueprint = Blueprint('user', __name__)
-
 
 def send_confirmation_email(email):
     token = generate_confirmation_token(email)
