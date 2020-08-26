@@ -33,6 +33,10 @@ jwt = JWTManager(app)
 mail = Mail(app)
 
 from mureader import views
+from mureader.views.ajax import ajax_blueprint
+from mureader.views.feed import feed_blueprint
 from mureader.views.user import user_blueprint
 
+app.register_blueprint(ajax_blueprint)
+app.register_blueprint(feed_blueprint)
 app.register_blueprint(user_blueprint)

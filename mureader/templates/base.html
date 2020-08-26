@@ -1,48 +1,22 @@
 <html>
     <head>
         <style type="text/css">
-            .entry-liked-1.entry-deleted-0 {
-                background-color: #D3DFC1;
-            }
-            .entry-deleted-1 {
-                background-color: #DAB2BA;
-            }
-            .entry-liked-1 .like-link {
-                display: none;
-            }
-            .entry-liked-0 .like-link {
-                display: inline;
-            }
-            .entry-liked-1 .unlike-link {
-                display: inline;
-            }
-            .entry-liked-0 .unlike-link {
-                display: none;
-            }
-            .entry-deleted-1 .delete-link {
-                display: none;
-            }
-            .entry-deleted-0 .delete-link {
-                display: inline;
-            }
-            .entry-deleted-1 .undelete-link {
-                display: inline;
-            }
-            .entry-deleted-0 .undelete-link {
-                display: none;
-            }
-            .feed-followed-1 .follow-link {
-                display: none;
-            }
-            .feed-followed-0 .follow-link {
-                display: inline;
-            }
-            .feed-followed-1 .unfollow-link {
-                display: inline;
-            }
-            .feed-followed-0 .unfollow-link {
-                display: none;
-            }
+            .entry-liked-1.entry-deleted-0 { background-color: #D3DFC1; }
+            .entry-deleted-1 { background-color: #DAB2BA; }
+            #navbar { background-color: #C4E38A; }
+            .error { background-color: #DAB2BA; }
+            .entry-liked-1 .like-link { display: none; }
+            .entry-liked-0 .like-link { display: inline; }
+            .entry-liked-1 .unlike-link { display: inline; }
+            .entry-liked-0 .unlike-link { display: none; }
+            .entry-deleted-1 .delete-link { display: none; }
+            .entry-deleted-0 .delete-link { display: inline; }
+            .entry-deleted-1 .undelete-link { display: inline; }
+            .entry-deleted-0 .undelete-link { display: none; }
+            .feed-followed-1 .follow-link { display: none; }
+            .feed-followed-0 .follow-link { display: inline; }
+            .feed-followed-1 .unfollow-link { display: inline; }
+            .feed-followed-0 .unfollow-link { display: none; }
         </style>
         <script type="text/javascript">
         function getCookie(name) {
@@ -77,7 +51,7 @@
             return false;
         }
         function likeEntry(entry_id, value, csrf_token) {
-            doPost("{{ url_for('like') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
+            doPost("{{ url_for('ajax.like') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
                 function() {
                     replaceClass(`entry-${entry_id}`, `entry-liked-${1-value}`, `entry-liked-${value}`);
                     if (value) {
@@ -87,7 +61,7 @@
             );
         }
         function deleteEntry(entry_id, value, csrf_token) {
-            doPost("{{ url_for('delete') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
+            doPost("{{ url_for('ajax.delete') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
                 function() {
                     replaceClass(`entry-${entry_id}`, `entry-deleted-${1-value}`, `entry-deleted-${value}`);
                 }
@@ -95,7 +69,7 @@
         }
         function followFeed(feed_id, value, csrf_token) {
             var affect_news = confirm(value ? "Do you want to also import old entries into your news feed?" : "Do you want to also delete existing entries from your news feed (liked entries will not be deleted)?") ? 1 : 0;
-            doPost("{{ url_for('follow') }}", `feed_id=${feed_id}&value=${value}&affect_news=${affect_news}`, csrf_token,
+            doPost("{{ url_for('ajax.follow') }}", `feed_id=${feed_id}&value=${value}&affect_news=${affect_news}`, csrf_token,
                 function() {
                     replaceClass(`feed-${feed_id}`, `feed-followed-${1-value}`, `feed-followed-${value}`);
                 }
@@ -107,15 +81,15 @@
     <center>
     <table width="85%">
         <tr id="navbar">
-            <td style="background-color: #C4E38A">
+            <td>
                 <table width="100%">
                     <tr>
                     <td width="5%">mureader</td>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('news') }}">news</a> |
-                            <a href="{{ url_for('liked') }}">liked</a> |
-                            <a href="{{ url_for('subscriptions') }}">subscriptions</a>
+                            <a href="{{ url_for('feed.news') }}">news</a> |
+                            <a href="{{ url_for('feed.liked') }}">liked</a> |
+                            <a href="{{ url_for('feed.subscriptions') }}">subscriptions</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
@@ -134,11 +108,11 @@
             <td>
             {% with messages = get_flashed_messages() %}
             {% if messages %}
-            <ul class="flashes">
+            <table width="100%">
                 {% for message in messages %}
-                    <li>{{ message }}</li>
+                    <tr class="error"><td style="text-align: center;">{{ message }}</td></tr>
                 {% endfor %}
-            </ul>
+            </table>
             {% endif %}
             {% endwith %}
             </td>

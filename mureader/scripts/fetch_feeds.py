@@ -47,13 +47,12 @@ def fetch_feed(feed):
         entry.updated_at = e['updated_at']
         db.session.add(entry)
     db.session.add(feed)
-    db.session.commit()
     if new_entries:
         for user in models.User.query.join(models.Subscription).join(models.Feed).filter(models.Subscription.feed == feed):
             print("Adding %s new entries to %s" % (len(new_entries), user.email))
             for entry in new_entries:
                 db.session.add(models.UserEntry(user=user, entry=entry))
-            db.session.commit()
+    db.session.commit()
 
 def main():
     for feed in models.Feed.query.all():

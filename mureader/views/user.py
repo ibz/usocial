@@ -2,7 +2,7 @@ from io import BytesIO
 
 from flask import abort, Blueprint, flash, redirect, render_template, request, url_for
 from flask_mail import Message
-from flask_jwt_extended import create_access_token, create_refresh_token, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
+from flask_jwt_extended import create_access_token, create_refresh_token, current_user, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
 from flask_jwt_extended import get_jwt_identity, jwt_refresh_token_required
 from itsdangerous import URLSafeTimedSerializer
 import pyqrcode
@@ -39,8 +39,8 @@ def check_token(token, expiration=(60 * 10)):
 
 @user_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
-    if get_jwt_identity():
-        return redirect(url_for('news'))
+    if current_user:
+        return redirect(url_for('feed.news'))
 
     if request.method == 'GET':
         return render_template('user/register.html', form=forms.EmailForm())
@@ -112,8 +112,8 @@ def confirm_email(token):
 
 @user_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
-    if get_jwt_identity():
-        return redirect(url_for('news'))
+    if current_user:
+        return redirect(url_for('feed.news'))
 
     if request.method == 'GET':
         return render_template('user/login.html', form=forms.LoginForm())
@@ -135,7 +135,7 @@ def login():
             login_success = True
 
     if login_success:
-        response = redirect(url_for('news'))
+        response = redirect(url_for('feed.news'))
         set_access_cookies(response, create_access_token(identity=user.email))
         set_refresh_cookies(response, create_refresh_token(identity=user.email))
         return response
@@ -146,33 +146,31 @@ def login():
 @user_blueprint.route('/me', methods=['GET', 'POST'])
 @jwt_required
 def me():
-    email = get_jwt_identity()
-    user = models.User.query.filter_by(email=email).first()
-
     if request.method == 'GET':
-        return render_template('user/me.html', user=user, form=forms.ProfileForm(obj=user), jwt_csrf_token=request.cookies.get('csrf_access_token'))
+        return render_template('user/me.html', user=current_user,
+            form=forms.ProfileForm(obj=current_user), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
-    form = forms.ProfileForm(request.form, obj=user)
+    form = forms.ProfileForm(request.form, obj=current_user)
     if form.validate():
-        form.populate_obj(user)
-        db.session.add(user)
+        form.populate_obj(current_user)
+        db.session.add(current_user)
     try:
         db.session.commit()
     except IntegrityError:
         flash("The username you want is already in use")
         return redirect(url_for('user.me'))
-    return render_template('user/me.html', user=user, form=forms.ProfileForm(obj=user), jwt_csrf_token=request.cookies.get('csrf_access_token'))
+    return render_template('user/me.html', user=current_user,
+        form=forms.ProfileForm(obj=current_user), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
 @user_blueprint.route('/logout', methods=['GET'])
 def logout():
-    response = redirect(url_for('news'))
+    response = redirect(url_for('feed.news'))
     unset_jwt_cookies(response)
     return response
 
 @user_blueprint.route('/refresh-jwt', methods=['GET'])
 @jwt_refresh_token_required
 def refresh_jwt():
-    email = get_jwt_identity()
-    response = redirect(url_for('news'))
-    set_access_cookies(response, create_access_token(identity=email))
+    response = redirect(url_for('feed.news'))
+    set_access_cookies(response, create_access_token(identity=get_jwt_identity()))
     return response
