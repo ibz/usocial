@@ -84,7 +84,7 @@
             <td>
                 <table width="100%">
                     <tr>
-                    <td width="5%">mureader</td>
+                    <td width="5%"><a href="/">mureader</a></td>
                     <td>
                         {% if user %}
                             <a href="{{ url_for('feed.news') }}">news</a> |
@@ -123,6 +123,8 @@
             </td>
         </tr>
     </table>
+    <hr />
+    <a href="{{ url_for('main.about') }}">about</a>
     </center>
     </body>
 </html>
