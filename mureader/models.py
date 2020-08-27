@@ -6,11 +6,8 @@ from urllib.parse import urlparse
 from babel.dates import format_timedelta
 import onetimepass
 
-from mureader.main import db, bcrypt
+from mureader.main import app, db, bcrypt
 
-def get_config():
-    import app
-    return app.config
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -37,7 +34,7 @@ class User(db.Model):
         return self.username or self.email
 
     def set_password(self, password):
-        self.password = bcrypt.generate_password_hash(password, get_config().get('BCRYPT_LOG_ROUNDS')).decode()
+        self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
 
     def get_totp_uri(self):
         return 'otpauth://totp/mureader:{0}?secret={1}&issuer=mureader'.format(self.email, self.otp_secret)

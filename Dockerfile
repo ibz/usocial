@@ -11,7 +11,7 @@ RUN ln -s /app /tmp/mureader
 RUN pip install --no-cache-dir -e /tmp/
 
 COPY config.py /app/
-RUN mkdir /app/instance
-COPY instance/ /app/instance
 
-VOLUME ["/db"]
+ENV INSTANCE_PATH=/instance
+
+VOLUME ["/db", "/instance"]

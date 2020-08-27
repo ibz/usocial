@@ -1,3 +1,4 @@
+import os
 from flask import Flask, redirect, url_for
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
@@ -21,8 +22,8 @@ dictConfig({
 })
 
 class MyFlask(Flask):
-    def __init__(self, import_name, instance_relative_config):
-        super().__init__(import_name, instance_relative_config=instance_relative_config)
+    def __init__(self, import_name, instance_path):
+        super().__init__(import_name, instance_path=instance_path, instance_relative_config=True)
         self.initialized = False
 
     def __call__(self, environ, start_response):
@@ -38,9 +39,9 @@ class MyFlask(Flask):
             self.initialized = True
         return super().__call__(environ, start_response)
 
-app = MyFlask(__name__, instance_relative_config=True)
+app = MyFlask(__name__, instance_path=os.environ.get('INSTANCE_PATH'))
 app.config.from_object('config')
-app.config.from_pyfile('config.py', silent=True)
+app.config.from_pyfile('config.py')
 
 CORS(app)
 CSRFProtect(app)

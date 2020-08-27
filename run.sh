@@ -1,0 +1,1 @@
+docker run -d -e VIRTUAL_HOST=mureader.com --network=webproxy --name=mureader -e LETSENCRYPT_HOST=mureader.com -e LETSENCRYPT_EMAIL=mureader@ibz.me -v $(pwd)/db:/db -v $(pwd)/instance:/instance ibz0/mureader
