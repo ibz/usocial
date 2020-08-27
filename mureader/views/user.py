@@ -9,8 +9,7 @@ import pyqrcode
 from sqlalchemy.exc import IntegrityError
 
 from mureader import forms, models
-from mureader.main import app, db, mail
-from mureader.views.utils import jwt_required
+from mureader.main import app, db, mail, jwt_required
 
 user_blueprint = Blueprint('user', __name__)
 

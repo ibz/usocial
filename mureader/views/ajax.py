@@ -3,8 +3,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import current_user, get_jwt_identity
 
 from mureader import models
-from mureader.main import app, db
-from mureader.views.utils import jwt_required
+from mureader.main import app, db, jwt_required
 
 ajax_blueprint = Blueprint('ajax', __name__)
 

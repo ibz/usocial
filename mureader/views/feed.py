@@ -5,8 +5,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 import requests
 
 from mureader import forms, models
-from mureader.main import db
-from mureader.views.utils import jwt_required
+from mureader.main import db, jwt_required
 
 feed_blueprint = Blueprint('feed', __name__)
 

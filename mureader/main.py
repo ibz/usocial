@@ -1,8 +1,10 @@
+from functools import wraps
 import os
 from flask import Flask, redirect, url_for
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, verify_jwt_in_request
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -50,3 +52,26 @@ bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
 mail = Mail(app)
+
+@jwt.claims_verification_failed_loader
+def no_jwt():
+    return redirect(url_for('user.login'))
+
+@jwt.expired_token_loader
+def jwt_token_expired():
+    return redirect(url_for('user.refresh_jwt'))
+
+@jwt.user_loader_callback_loader
+def load_user(email):
+    from mureader import models
+    return models.User.query.filter_by(email=email).first()
+
+def jwt_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            verify_jwt_in_request()
+        except NoAuthorizationError:
+            return no_jwt()
+        return fn(*args, **kwargs)
+    return wrapper
