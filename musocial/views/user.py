@@ -8,8 +8,8 @@ from itsdangerous import URLSafeTimedSerializer
 import pyqrcode
 from sqlalchemy.exc import IntegrityError
 
-from mureader import forms, models
-from mureader.main import app, db, mail, jwt_required
+from musocial import forms, models
+from musocial.main import app, db, mail, jwt_required
 
 user_blueprint = Blueprint('user', __name__)
 

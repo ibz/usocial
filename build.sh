@@ -1,1 +1,1 @@
-docker build -t ibz0/mureader .
+docker build -t ibz0/musocial .

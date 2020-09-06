@@ -5,8 +5,8 @@ from time import mktime
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 
-from mureader import models
-from mureader.main import db
+from musocial import models
+from musocial.main import db
 
 def parse_feed(url):
     f = feedparser.parse(url)

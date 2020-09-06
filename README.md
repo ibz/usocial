@@ -12,16 +12,12 @@
 mkdir instance && cat > instance/config.py << EOF
 SECRET_KEY = 'my-key'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///../db/app.db'
-MAIL_SERVER = ''
-MAIL_PORT = ''
-MAIL_USERNAME = ''
-MAIL_PASSWORD = ''
 EOF
 ```
 
-`mkdir mureader/db && python manage.py create_db`
+`mkdir db && python manage.py create_db`
 
-`export FLASK_APP=mureader.main`
+`export FLASK_APP=musocial.main`
 
 `flask run`
 
@@ -31,9 +27,16 @@ EOF
 
 ## Running the app with docker
 
-Edit `instance/config.py` to set the database URI to `sqlite:////db/app.db` (absolute in this case).
+```
+mkdir instance-docker && cat > instance-docker/config.py << EOF
+SECRET_KEY = 'my-key'
+SQLALCHEMY_DATABASE_URI = 'sqlite:////db/app.db'
+EOF
+```
 
-`docker run -p 8080:80 -v $(pwd)/db:/db -v $(pwd)/instance:/instance -t ibz0/mureader`
+Note that when running locally, we use the config under `instance/` which uses a relative path in the database URI. When running under docker, we use the config under `instance-docker/` which uses an absolute path, because we will mount the database as a volume in docker.
+
+`docker run -p 8080:80 -v $(pwd)/db:/db -v $(pwd)/instance-docker:/instance -t ibz0/musocial`
 
 or
 

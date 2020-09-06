@@ -3,4 +3,5 @@ __pycache__
 *.egg-info
 venv
 instance/
+instance-docker/
 db/
