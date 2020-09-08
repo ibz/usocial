@@ -10,20 +10,22 @@ from musocial.main import db, jwt_required
 
 feed_blueprint = Blueprint('feed', __name__)
 
-@feed_blueprint.route('/news', methods=['GET'])
-def news():
+@feed_blueprint.route('/last', methods=['GET'])
+def last():
     try:
         verify_jwt_in_request()
     except NoAuthorizationError:
         pass
-    if current_user:
-        entries = models.UserEntry.query \
-            .join(models.Entry) \
-            .filter(models.UserEntry.user==current_user, models.UserEntry.liked==False)
-    else:
-        entries = models.Entry.query
-    entries = entries.order_by(models.Entry.updated_at.desc()).limit(100)
+    entries = models.Entry.query.order_by(models.Entry.updated_at.desc()).limit(100)
+    return render_template('news.html', entries=entries, user=current_user)
 
+@feed_blueprint.route('/news', methods=['GET'])
+@jwt_required
+def news():
+    entries = models.UserEntry.query \
+        .join(models.Entry) \
+        .filter(models.UserEntry.user==current_user, models.UserEntry.liked==False)
+    entries = entries.order_by(models.Entry.updated_at.desc())
     return render_template('news.html', entries=entries, user=current_user)
 
 @feed_blueprint.route('/liked', methods=['GET'])
