@@ -89,7 +89,8 @@
                         {% if user %}
                             <a href="{{ url_for('feed.news') }}">news</a> |
                             <a href="{{ url_for('feed.liked') }}">liked</a> |
-                            <a href="{{ url_for('feed.subscriptions') }}">subscriptions</a>
+                            <a href="{{ url_for('subscription.discover') }}">discover feeds</a> |
+                            <a href="{{ url_for('subscription.follow_website') }}">follow website</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
