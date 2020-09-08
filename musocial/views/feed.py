@@ -5,6 +5,7 @@ from flask_jwt_extended.exceptions import NoAuthorizationError
 import requests
 
 from musocial import forms, models
+from musocial.parser import extract_feed_links, parse_feed
 from musocial.main import db, jwt_required
 
 feed_blueprint = Blueprint('feed', __name__)
@@ -55,20 +56,20 @@ def follow_website():
 
     url = request.form['url']
     if not '://' in url:
-        url = 'http://' + url
+        url = f"http://{url}"
     while url.endswith('/'):
         url = url[:-1]
 
     r = requests.get(url)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    links = soup.find_all('link', rel='alternate')
-    links = [(l.attrs['href'], l.attrs['title'])
-        for l in links
-        if l.attrs['type'] in ['application/atom+xml', 'application/rss+xml']]
-    links = [(url + u if u.startswith('/') else u, title) for u, title in links]
-    if not links: # NOTE: here we just assumed that "no links" means this is a feed on itself
-        # TODO: validate feed
-        feed = models.Feed(url=request.form['url'])
+    alt_links = extract_feed_links(url, r.text)
+    if not alt_links: # NOTE: here we just assumed that "no links" means this is a feed on itself
+        feed_url = request.form['url']
+        parsed_feed = parse_feed(feed_url)
+        if not parsed_feed:
+            flash(f"Cannot parse feed at: {feed_url}")
+            return redirect(url_for('feed.subscriptions'))
+        feed = models.Feed(url=feed_url)
+        feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()
         subscription = models.Subscription(user_id=current_user.id, feed_id=feed.id)
@@ -77,7 +78,7 @@ def follow_website():
         return redirect(url_for('feed.subscriptions'))
     else:
         form = forms.FollowFeedForm()
-        form.url.choices = links
+        form.url.choices = alt_links
         return render_template('follow.html',
             user=current_user,
             form=form, jwt_csrf_token=request.cookies.get('csrf_access_token'))

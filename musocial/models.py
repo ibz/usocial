@@ -58,6 +58,28 @@ class Feed(db.Model):
 
     entries = db.relationship('Entry')
 
+    def update(self, parsed_feed):
+        self.title = parsed_feed['title']
+        self.updated_at = parsed_feed['updated_at']
+        self.fetched_at = datetime.now()
+
+    def update_entries(self, parsed_feed):
+        new_entry_urls = set()
+        new_entries = []
+        updated_entries = []
+        for e in parsed_feed['entries']:
+            entry = Entry.query.filter_by(url=e['url']).first()
+            if not entry:
+                if e['url'] not in new_entry_urls:
+                    entry = Entry(feed_id=self.id, url=e['url'], title=e['title'], updated_at=e['updated_at'])
+                    new_entries.append(entry)
+                    new_entry_urls.add(e['url'])
+            elif entry.title != e['title'] or entry.updated_at != e['updated_at']:
+                entry.title = e['title']
+                entry.updated_at = e['updated_at']
+                updated_entries.append(entry)
+        return new_entries, updated_entries
+
 class Subscription(db.Model):
     __tablename__ = 'subscriptions'
 
