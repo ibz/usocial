@@ -39,9 +39,10 @@ def parse_feed(url):
 
     if f and f['feed'] and f['feed'].get('title'):
         return {'title': f['feed']['title'],
+                'homepage_url': f['feed'].get('link'),
                 'updated_at': parse_feed_datetime(f['feed'].get('updated_parsed')),
                 'entries': [{'title': e['title'], 'url': e['link'], 'updated_at': parse_feed_datetime(e.get('updated_parsed'))}
-                             for e in f['entries'] if e and e.get('link') and e.get('title')]}
+                              for e in f['entries'] if e and e.get('link') and e.get('title')]}
 
     try:
         root = fromstring(content)
@@ -55,8 +56,8 @@ def parse_feed(url):
     return {'title': title_el.text,
             'updated_at': parse_datetime(date_el.text) if date_el else None,
             'entries': [{'title': item.find('title').text, 'url': item.find('link').text,
-                            'updated_at': parse_datetime(item.find('pubDate').text)}
-                            for item in root.findall('channel/item')]}
+                         'updated_at': parse_datetime(item.find('pubDate').text)}
+                         for item in root.findall('channel/item')]}
 
 def extract_feed_links(url, content):
     parsed_url = urlparse(url)

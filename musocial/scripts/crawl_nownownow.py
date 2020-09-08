@@ -43,6 +43,9 @@ def parse_now_page(url, content):
         if not parsed_feed:
             print("FEED FAIL")
             continue
+        if not parsed_feed['entries']:
+            print("EMPTY FEED")
+            continue
         feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()

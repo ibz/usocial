@@ -1,6 +1,7 @@
 import base64
 from datetime import datetime
 import os
+import os.path
 from urllib.parse import urlparse
 
 from babel.dates import format_timedelta
@@ -52,6 +53,7 @@ class Feed(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     url = db.Column(db.String(1000), unique=True, nullable=False)
+    homepage_url = db.Column(db.String(1000), nullable=False)
     title = db.Column(db.String(1000), nullable=True)
     updated_at = db.Column(db.DateTime, nullable=True)
     fetched_at = db.Column(db.DateTime, nullable=True)
@@ -62,6 +64,12 @@ class Feed(db.Model):
         self.title = parsed_feed['title']
         self.updated_at = parsed_feed['updated_at']
         self.fetched_at = datetime.now()
+
+        if not self.homepage_url:
+            self.homepage_url = parsed_feed.get('homepage_url')
+        if not self.homepage_url:
+            entry_urls = [e['url'] for e in parsed_feed['entries'] if e['url'].startswith(self.url)]
+            self.homepage_url = os.path.commonprefix(entry_urls)
 
     def update_entries(self, parsed_feed):
         new_entry_urls = set()
