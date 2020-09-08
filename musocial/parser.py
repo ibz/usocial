@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import dateutil.parser
 import feedparser
+from http.client import IncompleteRead
 from time import mktime
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -28,7 +29,10 @@ def parse_feed(url):
         response = urlopen(Request(url, headers=HEADERS))
     except (HTTPError, URLError):
         return
-    content = response.read()
+    try:
+        content = response.read()
+    except IncompleteRead:
+        return
     if len(content) < 10:
         return
 
