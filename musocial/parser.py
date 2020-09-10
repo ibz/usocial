@@ -24,6 +24,19 @@ def parse_feed_datetime(dt):
 def parse_datetime(dt):
     return dateutil.parser.parse(dt)
 
+def parse_rss_item(item):
+    description_el = item.find('description')
+    return {'title': item.find('title').text,
+            'url': item.find('link').text,
+            'content': description_el.text if description_el else None,
+            'updated_at': parse_datetime(item.find('pubDate').text)}
+
+def parse_feed_entry(entry):
+    return {'title': entry['title'],
+            'url': entry['link'],
+            'content': entry['content'][0]['value'] if entry.get('content') else entry.get('summary'),
+            'updated_at': parse_feed_datetime(entry.get('updated_parsed'))}
+
 def parse_feed(url):
     try:
         response = urlopen(Request(url, headers=HEADERS))
@@ -31,7 +44,7 @@ def parse_feed(url):
         return
     try:
         content = response.read()
-    except IncompleteRead:
+    except (ConnectionResetError, IncompleteRead):
         return
     if len(content) < 10:
         return
@@ -43,10 +56,8 @@ def parse_feed(url):
 
     if f and f['feed'] and f['feed'].get('title'):
         return {'title': f['feed']['title'],
-                'homepage_url': f['feed'].get('link'),
                 'updated_at': parse_feed_datetime(f['feed'].get('updated_parsed')),
-                'entries': [{'title': e['title'], 'url': e['link'], 'updated_at': parse_feed_datetime(e.get('updated_parsed'))}
-                              for e in f['entries'] if e and e.get('link') and e.get('title')]}
+                'entries': [parse_feed_entry(e) for e in f['entries'] if e and e.get('link') and e.get('title')]}
 
     try:
         root = fromstring(content)
@@ -59,9 +70,7 @@ def parse_feed(url):
     date_el = root.find('channel/lastBuildDate')
     return {'title': title_el.text,
             'updated_at': parse_datetime(date_el.text) if date_el else None,
-            'entries': [{'title': item.find('title').text, 'url': item.find('link').text,
-                         'updated_at': parse_datetime(item.find('pubDate').text)}
-                         for item in root.findall('channel/item')]}
+            'entries': [parse_rss_item(item) for item in root.findall('channel/item')]}
 
 def extract_feed_links(url, content):
     parsed_url = urlparse(url)

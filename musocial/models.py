@@ -79,11 +79,14 @@ class Feed(db.Model):
             entry = Entry.query.filter_by(url=e['url']).first()
             if not entry:
                 if e['url'] not in new_entry_urls:
-                    entry = Entry(feed_id=self.id, url=e['url'], title=e['title'], updated_at=e['updated_at'])
+                    entry = Entry(feed_id=self.id, url=e['url'], title=e['title'],
+                        content_from_feed=e['content'],
+                        updated_at=e['updated_at'])
                     new_entries.append(entry)
                     new_entry_urls.add(e['url'])
             elif entry.title != e['title'] or entry.updated_at != e['updated_at']:
                 entry.title = e['title']
+                entry.content_from_feed = e['content']
                 entry.updated_at = e['updated_at']
                 updated_entries.append(entry)
         return new_entries, updated_entries
@@ -103,6 +106,7 @@ class Entry(db.Model):
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
     url = db.Column(db.String(1000), unique=True, nullable=False)
     title = db.Column(db.String(1000))
+    content_from_feed = db.Column(db.String(10000))
     updated_at = db.Column(db.DateTime)
 
     @property
