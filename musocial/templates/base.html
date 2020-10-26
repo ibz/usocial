@@ -17,6 +17,8 @@
             .feed-followed-0 .follow-link { display: inline; }
             .feed-followed-1 .unfollow-link { display: inline; }
             .feed-followed-0 .unfollow-link { display: none; }
+            .main-row { color: black; }
+            .extra-row { color: gray; }
         </style>
         <script type="text/javascript">
         function getCookie(name) {
@@ -89,6 +91,7 @@
                         {% if user %}
                             <a href="{{ url_for('feed.news') }}">news</a> |
                             <a href="{{ url_for('feed.liked') }}">liked</a> |
+                            <a href="{{ url_for('subscription.my_feeds') }}">my feeds</a> |
                             <a href="{{ url_for('subscription.discover') }}">discover feeds</a> |
                             <a href="{{ url_for('subscription.follow_website') }}">follow website</a>
                         {% endif %}

@@ -1,22 +1,49 @@
+from datetime import datetime
+
+from babel.dates import format_timedelta
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_jwt_extended import current_user
 import requests
+from sqlalchemy import func
 
-from musocial import forms, models
+from musocial import forms, models as m
 from musocial.parser import extract_feed_links, parse_feed
 from musocial.main import db, jwt_required
 
 subscription_blueprint = Blueprint('subscription', __name__)
 
+@subscription_blueprint.route('/my-feeds', methods=['GET'])
+@jwt_required
+def my_feeds():
+    feeds = []
+    q = db.session.query(m.Feed, func.count(m.Entry.id), func.max(m.Entry.updated_at)) \
+                        .join(m.Subscription) \
+                        .filter(m.Subscription.user_id == current_user.id) \
+                        .outerjoin(m.Entry) \
+                        .group_by(m.Feed) \
+                        .order_by(func.max(m.Entry.updated_at).desc()).all()
+    for f, entry_count, last_entry_date in q:
+        f.subscribed = True
+        f.entry_count = entry_count
+        f.last_entry_relative = format_timedelta(last_entry_date - datetime.now(), add_direction=True) if last_entry_date else 'never'
+        feeds.append(f)
+    return render_template('subscription/feeds.html', feeds=feeds, user=current_user)
+
 @subscription_blueprint.route('/discover', methods=['GET'])
 @jwt_required
 def discover():
-    subscribed_feed_ids = {s.feed_id for s in models.Subscription.query.filter_by(user=current_user)}
-    feeds = [f for f in models.Feed.query.all()]
-    for f in feeds:
-        if f.id in subscribed_feed_ids:
-            f.subscribed = True
-    return render_template('subscription/discover.html', feeds=feeds, user=current_user)
+    subscribed_feed_ids = {s.feed_id for s in m.Subscription.query.filter_by(user=current_user)}
+    feeds = []
+    q = db.session.query(m.Feed, func.count(m.Entry.id), func.max(m.Entry.updated_at)) \
+                        .outerjoin(m.Entry) \
+                        .group_by(m.Feed) \
+                        .order_by(func.max(m.Entry.updated_at).desc()).all()
+    for f, entry_count, last_entry_date in q:
+        f.subscribed = f.id in subscribed_feed_ids
+        f.entry_count = entry_count
+        f.last_entry_relative = format_timedelta(last_entry_date - datetime.now(), add_direction=True) if last_entry_date else 'never'
+        feeds.append(f)
+    return render_template('subscription/feeds.html', feeds=feeds, user=current_user)
 
 @subscription_blueprint.route('/follow-website', methods=['GET', 'POST'])
 @jwt_required
@@ -39,12 +66,20 @@ def follow_website():
         if not parsed_feed:
             flash(f"Cannot parse feed at: {feed_url}")
             return redirect(url_for('subscription.follow_website'))
-        feed = models.Feed(url=feed_url)
+        feed = m.Feed(url=feed_url)
         feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()
-        subscription = models.Subscription(user_id=current_user.id, feed_id=feed.id)
+        new_entries, updated_entries = feed.update_entries(parsed_feed)
+        db.session.add(feed)
+        for entry in new_entries + updated_entries:
+            db.session.add(entry)
+        db.session.commit()
+        subscription = m.Subscription(user_id=current_user.id, feed_id=feed.id)
         db.session.add(subscription)
+        db.session.commit()
+        for entry in new_entries + updated_entries:
+            db.session.add(m.UserEntry(user=current_user, entry=entry))
         db.session.commit()
         return redirect(url_for('subscription.follow_website'))
     else:

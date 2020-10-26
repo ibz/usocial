@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<table>
+        {% for feed in feeds %}
+            <tr class="main-row">
+                <td id="feed-{{ feed.id }}" class="feed-followed-{% if feed.subscribed %}1{% else %}0{% endif %}">
+                    {{ feed.title }} (<a target="_blank" href="{{ feed.homepage_url }}">{{ feed.domain_name }}</a>)
+                    <span class="unfollow-link">
+                        (<a onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unfollow</a>)
+                    </span>
+                    <span class="follow-link">
+                        (<a onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href="">follow</a>)
+                    </span>
+                </td>
+            </tr>
+            <tr class="extra-row">
+                <td>
+                    {{ feed.entry_count }} entries | last entry {{ feed.last_entry_relative }}
+                </td>
+            </tr>
+            <tr><td></td></tr>
+        {% endfor %}
+</table>
+{% endblock %}

@@ -49,10 +49,12 @@ def parse_now_page(url, content):
         feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()
-        new_entries, updated_entries = feed.update_entries(parsed_feed)
-        for entry in new_entries + updated_entries:
-            db.session.add(entry)
-        db.session.commit()
+        if parsed_feed:
+            new_entries, updated_entries = feed.update_entries(parsed_feed)
+            db.session.add(feed)
+            for entry in new_entries + updated_entries:
+                db.session.add(entry)
+            db.session.commit()
         return # NOTE: we only save the 1st valid feed
 
 def main():

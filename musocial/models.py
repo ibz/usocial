@@ -57,19 +57,26 @@ class Feed(db.Model):
     title = db.Column(db.String(1000), nullable=True)
     updated_at = db.Column(db.DateTime, nullable=True)
     fetched_at = db.Column(db.DateTime, nullable=True)
+    fetch_failed = db.Column(db.Boolean, default=False)
 
     entries = db.relationship('Entry')
 
-    def update(self, parsed_feed):
-        self.title = parsed_feed['title']
-        self.updated_at = parsed_feed['updated_at']
-        self.fetched_at = datetime.now()
+    @property
+    def domain_name(self):
+        return urlparse(self.homepage_url).netloc
 
-        if not self.homepage_url:
-            self.homepage_url = parsed_feed.get('homepage_url')
+    def update(self, parsed_feed):
+        self.fetched_at = datetime.now()
+        if not parsed_feed:
+            self.fetch_failed = True
+            return
+        self.fetch_failed = False
+        self.homepage_url = parsed_feed['homepage_url']
         if not self.homepage_url:
             entry_urls = [e['url'] for e in parsed_feed['entries'] if e['url'].startswith(self.url)]
             self.homepage_url = os.path.commonprefix(entry_urls)
+        self.title = parsed_feed['title']
+        self.updated_at = parsed_feed['updated_at']
 
     def update_entries(self, parsed_feed):
         new_entry_urls = set()

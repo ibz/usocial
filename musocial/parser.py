@@ -54,8 +54,9 @@ def parse_feed(url):
     except RuntimeError:
         f = None
 
-    if f and f['feed'] and f['feed'].get('title'):
+    if f and f['feed'] and f['feed'].get('title') and f['feed'].get('link'):
         return {'title': f['feed']['title'],
+                'homepage_url': f['feed']['link'],
                 'updated_at': parse_feed_datetime(f['feed'].get('updated_parsed')),
                 'entries': [parse_feed_entry(e) for e in f['entries'] if e and e.get('link') and e.get('title')]}
 
@@ -67,8 +68,12 @@ def parse_feed(url):
     title_el = root.find('channel/title')
     if not title_el:
         return
+    link_el = root.find('channel/link')
+    if not link_el:
+        return
     date_el = root.find('channel/lastBuildDate')
     return {'title': title_el.text,
+            'homepage_url': link_el.text,
             'updated_at': parse_datetime(date_el.text) if date_el else None,
             'entries': [parse_rss_item(item) for item in root.findall('channel/item')]}
 
