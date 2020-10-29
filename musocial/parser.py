@@ -12,6 +12,8 @@ from xml.etree.ElementTree import fromstring, ElementTree, ParseError
 
 import config
 
+from musocial.main import app
+
 HEADERS = {'User-Agent': config.USER_AGENT}
 
 def parse_feed_datetime(dt):
@@ -41,13 +43,16 @@ def parse_feed_entry(entry):
 def parse_feed(url):
     try:
         response = urlopen(Request(url, headers=HEADERS), timeout=10)
-    except (HTTPError, URLError, timeout):
+    except (HTTPError, URLError, timeout) as e:
+        app.log_exception(e)
         return
     try:
         content = response.read()
-    except (ConnectionResetError, IncompleteRead):
+    except (ConnectionResetError, IncompleteRead) as e:
+        app.log_exception(e)
         return
     if len(content) < 10:
+        app.logger.warn("Content too short.")
         return
 
     try:
@@ -63,14 +68,17 @@ def parse_feed(url):
 
     try:
         root = fromstring(content)
-    except ParseError:
+    except ParseError as e:
+        app.log_exception(e)
         return
 
     title_el = root.find('channel/title')
     if not title_el:
+        app.logger.warn("No channel/title element found.")
         return
     link_el = root.find('channel/link')
     if not link_el:
+        app.logger.warn("No channel/link element found.")
         return
     date_el = root.find('channel/lastBuildDate')
     return {'title': title_el.text,
