@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-<p>musocial is a minimalist social network. an anti-social network, if you want to call it like that. you can use it to follow people that publish rss / atom feeds on their personal websites.</p>
-<p>simple design that stays out your way, inspired by <a href="http://news.ycombinator.com" target="_blank">hacker news</a> and <a href="http://pinboard.in" target="_blank">pinboard</a></p>
+<p>muSocial is a <strong>minimalist feed reader</strong>. Or an anti-social network. You can use it to follow blogs that publish RSS / Atom feeds, which most blogs do.</p>
+<p><strong>Simple design</strong> that stays out your way. Inspired by <a href="http://news.ycombinator.com" target="_blank">Hacker News</a> and <a href="http://pinboard.in" target="_blank">Pinboard</a>.</p>
+<p>All about <strong>privacy</strong>. <strong>No tracking</strong>. <strong>No ads</strong>.</p>
+<p><strong>Open source</strong>. You can browse the source code on <a target="_blank" href="https://github.com/ibz/musocial">GitHub</a>. You can easily run it on your own server.</p>
+<p>If you don't want to run it yourself, go ahead and <a href="{{ url_for('user.register') }}">create an account</a> on this instance. It is free for now, but I will probably charge for usage in the future, as I don't plan to monetize it by tracking you or running ads.</p>
 {% endblock %}

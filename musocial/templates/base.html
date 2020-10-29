@@ -1,5 +1,9 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <title>muSocial - the anti-social network</title>
         <style type="text/css">
             .entry-liked-1.entry-deleted-0 { background-color: #D3DFC1; }
             .entry-deleted-1 { background-color: #DAB2BA; }
@@ -86,10 +90,10 @@
             <td>
                 <table width="100%">
                     <tr>
-                    <td width="5%"><a href="{{ url_for('feed.last') }}">musocial</a></td>
+                    <td width="5%"><a href="{{ url_for('feed.last') }}">all news</a></td>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('feed.news') }}">news</a> |
+                            <a href="{{ url_for('feed.news') }}">my news</a> |
                             <a href="{{ url_for('feed.liked') }}">liked</a> |
                             <a href="{{ url_for('subscription.my_feeds') }}">my feeds</a> |
                             <a href="{{ url_for('subscription.discover') }}">discover feeds</a> |

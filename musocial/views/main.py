@@ -6,6 +6,11 @@ main_blueprint = Blueprint('main', __name__)
 
 @main_blueprint.route('/', methods=['GET'])
 def index():
+    try:
+        verify_jwt_in_request()
+    except NoAuthorizationError:
+        return redirect(url_for('main.about'))
+
     return redirect(url_for('feed.news'))
 
 @main_blueprint.route('/about', methods=['GET'])
