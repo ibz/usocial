@@ -3,6 +3,7 @@ from datetime import datetime
 import dateutil.parser
 import feedparser
 from http.client import IncompleteRead
+from socket import timeout
 from time import mktime
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -39,8 +40,8 @@ def parse_feed_entry(entry):
 
 def parse_feed(url):
     try:
-        response = urlopen(Request(url, headers=HEADERS))
-    except (HTTPError, URLError):
+        response = urlopen(Request(url, headers=HEADERS), timeout=10)
+    except (HTTPError, URLError, timeout):
         return
     try:
         content = response.read()
