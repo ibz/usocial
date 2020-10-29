@@ -3,11 +3,11 @@ from datetime import datetime
 import dateutil.parser
 import feedparser
 from http.client import IncompleteRead
+import requests
 from socket import timeout
 from time import mktime
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
 from xml.etree.ElementTree import fromstring, ElementTree, ParseError
 
 import config
@@ -42,13 +42,8 @@ def parse_feed_entry(entry):
 
 def parse_feed(url):
     try:
-        response = urlopen(Request(url, headers=HEADERS), timeout=10)
-    except (HTTPError, URLError, timeout) as e:
-        app.log_exception(e)
-        return
-    try:
-        content = response.read()
-    except (ConnectionResetError, IncompleteRead) as e:
+        content = requests.get(url, headers=HEADERS, timeout=10).text
+    except Exception as e:
         app.log_exception(e)
         return
     if len(content) < 10:
