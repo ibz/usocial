@@ -21,7 +21,6 @@ class User(db.Model):
     otp_secret = db.Column(db.String(16))
     password = db.Column(db.String(255))
     registered_on = db.Column(db.DateTime, nullable=False)
-    is_pro = db.Column(db.Boolean, nullable=False, default=False)
 
     subscriptions = db.relationship('Subscription', backref='user')
 
