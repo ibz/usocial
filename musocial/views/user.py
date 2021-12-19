@@ -3,13 +3,13 @@ from io import BytesIO
 from flask import abort, Blueprint, flash, redirect, render_template, request, url_for
 from flask_mail import Message
 from flask_jwt_extended import create_access_token, create_refresh_token, current_user, set_access_cookies, set_refresh_cookies, unset_jwt_cookies
-from flask_jwt_extended import get_jwt_identity, jwt_refresh_token_required
+from flask_jwt_extended import get_jwt_identity
 from itsdangerous import URLSafeTimedSerializer
 import pyqrcode
 from sqlalchemy.exc import IntegrityError
 
 from musocial import forms, models
-from musocial.main import app, db, mail, jwt_required
+from musocial.main import app, db, mail, jwt_required, refresh_jwt_required
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -166,7 +166,7 @@ def logout():
     return response
 
 @user_blueprint.route('/refresh-jwt', methods=['GET'])
-@jwt_refresh_token_required
+@refresh_jwt_required
 def refresh_jwt():
     response = redirect(url_for('feed.news'))
     set_access_cookies(response, create_access_token(identity=get_jwt_identity()))

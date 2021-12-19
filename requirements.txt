@@ -7,12 +7,12 @@ Flask-Cors
 Flask-JWT-Extended
 Flask-Mail
 Flask-Migrate
-Flask-Script
 Flask-WTF
 itsdangerous
 onetimepass
 pyjwt
 pytest
+python-dateutil
 pyqrcode
 requests
 wheel

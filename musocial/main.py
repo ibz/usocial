@@ -1,6 +1,7 @@
 from functools import wraps
 import os
 from flask import Flask, redirect, url_for
+from flask.cli import with_appcontext
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request
@@ -55,7 +56,13 @@ db = SQLAlchemy(app)
 jwt = JWTManager(app)
 mail = Mail(app)
 
-@jwt.claims_verification_failed_loader
+@app.cli.command("create-db")
+@with_appcontext
+def create_db():
+    from musocial import models
+    db.create_all()
+
+@jwt.token_verification_failed_loader
 def no_jwt():
     return redirect(url_for('user.login'))
 
@@ -63,17 +70,23 @@ def no_jwt():
 def jwt_token_expired():
     return redirect(url_for('user.refresh_jwt'))
 
-@jwt.user_loader_callback_loader
-def load_user(email):
+@jwt.user_lookup_loader
+def load_user(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
     from musocial import models
-    return models.User.query.filter_by(email=email).first()
+    return models.User.query.filter_by(email=identity).one_or_none()
 
-def jwt_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            verify_jwt_in_request()
-        except NoAuthorizationError:
-            return no_jwt()
-        return fn(*args, **kwargs)
-    return wrapper
+def jwt_required_wrapper(refresh):
+    def jwt_required(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                verify_jwt_in_request(refresh)
+            except NoAuthorizationError:
+                return no_jwt()
+            return fn(*args, **kwargs)
+        return wrapper
+    return jwt_required
+
+jwt_required = jwt_required_wrapper(False)
+refresh_jwt_required = jwt_required_wrapper(True)

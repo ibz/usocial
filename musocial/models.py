@@ -23,7 +23,7 @@ class User(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False)
     is_pro = db.Column(db.Boolean, nullable=False, default=False)
 
-    subscriptions = db.relationship('Subscription')
+    subscriptions = db.relationship('Subscription', backref='user')
 
     def __init__(self, email):
         self.email = email
@@ -102,7 +102,6 @@ class Subscription(db.Model):
     __tablename__ = 'subscriptions'
 
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), primary_key=True)
-    user = db.relationship(User)
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id), primary_key=True)
     feed = db.relationship(Feed)
 

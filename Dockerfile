@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6
+FROM tiangolo/uwsgi-nginx-flask:python3.8
 
 COPY requirements.txt /tmp/
 RUN pip install -U pip
@@ -13,5 +13,4 @@ RUN pip install --no-cache-dir -e /tmp/
 COPY config.py /app/
 
 ENV INSTANCE_PATH=/instance
-
-VOLUME ["/db", "/instance"]
+VOLUME ["/instance"]

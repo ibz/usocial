@@ -1,10 +1,8 @@
 from datetime import datetime
 import sys
 
-from flask_mail import Message
-
 from musocial import models
-from musocial.main import app, db, mail
+from musocial.main import db
 from musocial.parser import parse_feed
 
 def fetch_feed(feed):
@@ -43,18 +41,10 @@ def main():
     if url_contains:
         feeds = feeds.filter(models.Feed.url.contains(url_contains))
 
-    stats = []
     for feed in feeds:
         new_entries, users = fetch_feed(feed)
-        stats.append((feed.url, new_entries, users))
-
-    stats_body = ""
-    for url, new_entries, users in stats:
-        stats_body += f"{url} - New Entries: {new_entries} - Users: {users}\n"
-    m = Message("Fetch Feeds DONE", recipients=[app.config['LOG_EMAIL']], body=stats_body, sender=app.config['MAIL_DEFAULT_SENDER'])
-
-    with app.app_context():
-        mail.send(m)
+        print(f"{feed.url} - New Entries: {new_entries} - Users: {users}")
+    print("Fetch Feeds DONE")
 
 if __name__ == '__main__':
     main()
