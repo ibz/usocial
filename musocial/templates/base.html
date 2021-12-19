@@ -90,13 +90,11 @@
             <td>
                 <table width="100%">
                     <tr>
-                    <td width="5%"><a href="{{ url_for('feed.last') }}">all news</a></td>
                     <td>
                         {% if user %}
                             <a href="{{ url_for('feed.news') }}">my news</a> |
                             <a href="{{ url_for('feed.liked') }}">liked</a> |
                             <a href="{{ url_for('subscription.my_feeds') }}">my feeds</a> |
-                            <a href="{{ url_for('subscription.discover') }}">discover feeds</a> |
                             <a href="{{ url_for('subscription.follow_website') }}">follow website</a>
                         {% endif %}
                     </td>

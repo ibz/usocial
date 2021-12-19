@@ -29,22 +29,6 @@ def my_feeds():
         feeds.append(f)
     return render_template('subscription/feeds.html', feeds=feeds, user=current_user)
 
-@subscription_blueprint.route('/discover', methods=['GET'])
-@jwt_required
-def discover():
-    subscribed_feed_ids = {s.feed_id for s in m.Subscription.query.filter_by(user=current_user)}
-    feeds = []
-    q = db.session.query(m.Feed, func.count(m.Entry.id), func.max(m.Entry.updated_at)) \
-                        .outerjoin(m.Entry) \
-                        .group_by(m.Feed) \
-                        .order_by(func.max(m.Entry.updated_at).desc()).all()
-    for f, entry_count, last_entry_date in q:
-        f.subscribed = f.id in subscribed_feed_ids
-        f.entry_count = entry_count
-        f.last_entry_relative = format_timedelta(last_entry_date - datetime.now(), add_direction=True) if last_entry_date else 'never'
-        feeds.append(f)
-    return render_template('subscription/feeds.html', feeds=feeds, user=current_user)
-
 @subscription_blueprint.route('/follow-website', methods=['GET', 'POST'])
 @jwt_required
 def follow_website():
