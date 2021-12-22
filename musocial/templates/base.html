@@ -92,18 +92,16 @@
                     <tr>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('feed.news') }}">my news</a> |
-                            <a href="{{ url_for('feed.liked') }}">liked</a> |
-                            <a href="{{ url_for('subscription.my_feeds') }}">my feeds</a> |
-                            <a href="{{ url_for('subscription.follow_website') }}">follow website</a>
+                            <a href="{{ url_for('feed.news') }}">News</a> |
+                            <a href="{{ url_for('feed.liked') }}">Liked</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
                         {% if user %}
-                            <a href="{{ url_for('user.me') }}">{{ user.username }}</a> |
-                            <a href="{{ url_for('user.logout') }}">log out</a>
+                            <a href="{{ url_for('subscription.subscriptions') }}">Subscriptions</a> |
+                            <a href="{{ url_for('user.me') }}">Me</a>
                         {% else %}
-                            <a href="{{ url_for('user.login') }}">log in</a>
+                            <a href="{{ url_for('user.login') }}">Log in</a>
                         {% endif %}
                     </td>
                     </tr>
@@ -126,10 +124,10 @@
         <tr class="content">
             <td>
             {% block content %}{% endblock %}
+            <hr />
             </td>
         </tr>
     </table>
-    <hr />
     <a href="{{ url_for('main.about') }}">about</a>
     </center>
     </body>

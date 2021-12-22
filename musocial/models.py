@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from babel.dates import format_timedelta
 
 from musocial.main import app, db, bcrypt
+from musocial.parser import strip_protocol
 
 
 class User(db.Model):
@@ -57,10 +58,14 @@ class Feed(db.Model):
             self.fetch_failed = True
             return
         self.fetch_failed = False
-        self.homepage_url = parsed_feed['homepage_url']
-        if not self.homepage_url:
-            entry_urls = [e['url'] for e in parsed_feed['entries'] if e['url'].startswith(self.url)]
-            self.homepage_url = os.path.commonprefix(entry_urls)
+        feed_domain = urlparse(self.url).netloc
+        urls = {strip_protocol(self.url)}
+        for e in parsed_feed['entries']:
+            url = strip_protocol(e['url'])
+            if url.startswith(feed_domain):
+                urls.add(url)
+        common_prefix = os.path.commonprefix(list(urls))
+        self.homepage_url = f'http://{common_prefix}'
         self.title = parsed_feed['title']
         self.updated_at = parsed_feed['updated_at']
 

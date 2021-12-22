@@ -13,7 +13,7 @@ class NewPasswordForm(FlaskForm):
     repeat_new_password = PasswordField("Repeat your new password")
 
 class FollowWebsiteForm(FlaskForm):
-   url = StringField("URL of the website to follow")
+   url = StringField("http://")
 
 class FollowFeedForm(FlaskForm):
-   url = SelectField("URL of the feed to follow")
+   url = SelectField("Feed")

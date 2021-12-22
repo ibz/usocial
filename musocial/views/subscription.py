@@ -12,9 +12,9 @@ from musocial.main import db, jwt_required
 
 subscription_blueprint = Blueprint('subscription', __name__)
 
-@subscription_blueprint.route('/my-feeds', methods=['GET'])
+@subscription_blueprint.route('/subscriptions', methods=['GET'])
 @jwt_required
-def my_feeds():
+def subscriptions():
     feeds = []
     q = db.session.query(m.Feed, func.count(m.Entry.id), func.max(m.Entry.updated_at)) \
                         .join(m.Subscription) \
@@ -50,7 +50,8 @@ def follow_website():
         if not parsed_feed:
             flash(f"Cannot parse feed at: {feed_url}")
             return redirect(url_for('subscription.follow_website'))
-        feed = m.Feed(url=feed_url)
+        existing_feed = m.Feed.query.filter_by(url=feed_url).one_or_none()
+        feed = existing_feed or m.Feed(url=feed_url)
         feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()
@@ -65,7 +66,7 @@ def follow_website():
         for entry in new_entries + updated_entries:
             db.session.add(m.UserEntry(user=current_user, entry=entry))
         db.session.commit()
-        return redirect(url_for('subscription.follow_website'))
+        return redirect(url_for('subscription.subscriptions'))
     else:
         form = forms.FollowFeedForm()
         form.url.choices = alt_links
