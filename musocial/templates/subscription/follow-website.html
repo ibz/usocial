@@ -2,7 +2,7 @@
 {% block content %}
 <div>
     <form action="{{ url_for('subscription.follow_website') }}" method="POST">
-        <input id="jwt_csrf_token" name="jwt_csrf_token" type="hidden" value="{{ jwt_csrf_token }}">
+        <input id="jwt_csrf_token" name="jwt_csrf_token" type="hidden" value="{{ jwt_csrf_token }}" />
         {{ form.hidden_tag() }}
         {{ form.url.label }}
         {{ form.url }}

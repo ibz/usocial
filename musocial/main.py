@@ -6,7 +6,6 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
-from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 
@@ -54,13 +53,16 @@ CSRFProtect(app)
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
-mail = Mail(app)
 
 @app.cli.command("create-db")
 @with_appcontext
 def create_db():
     from musocial import models
     db.create_all()
+
+    # create the default user here
+    db.session.add(models.User('me'))
+    db.session.commit()
 
 @jwt.token_verification_failed_loader
 def no_jwt():
@@ -74,7 +76,7 @@ def jwt_token_expired():
 def load_user(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
     from musocial import models
-    return models.User.query.filter_by(email=identity).one_or_none()
+    return models.User.query.filter_by(username=identity).one_or_none()
 
 def jwt_required_wrapper(refresh):
     def jwt_required(fn):

@@ -1,11 +1,9 @@
-import base64
 from datetime import datetime
 import os
 import os.path
 from urllib.parse import urlparse
 
 from babel.dates import format_timedelta
-import onetimepass
 
 from musocial.main import app, db, bcrypt
 
@@ -14,33 +12,22 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    email = db.Column(db.String(255), unique=True, nullable=False)
-    email_confirmed = db.Column(db.Boolean, nullable=False, default=False)
-    username = db.Column(db.String(255), unique=True)
-    public_profile = db.Column(db.Boolean, nullable=False, default=False)
-    otp_secret = db.Column(db.String(16))
+    username = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255))
     registered_on = db.Column(db.DateTime, nullable=False)
+    public_profile = db.Column(db.Boolean, nullable=False, default=False)
 
     subscriptions = db.relationship('Subscription', backref='user')
 
-    def __init__(self, email):
-        self.email = email
-        self.otp_secret = base64.b32encode(os.urandom(10)).decode('utf-8')
+    def __init__(self, username):
+        self.username = username
         self.registered_on = datetime.now()
 
-    @property
-    def display_name(self):
-        return self.username or self.email
-
     def set_password(self, password):
-        self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
-
-    def get_totp_uri(self):
-        return 'otpauth://totp/musocial:{0}?secret={1}&issuer=musocial'.format(self.email, self.otp_secret)
-
-    def verify_totp(self, token):
-        return onetimepass.valid_totp(token, self.otp_secret)
+        if password:
+            self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+        else:
+            self.password = None
 
     def verify_password(self, password):
         if not self.password:

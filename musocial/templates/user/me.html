@@ -1,13 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<p>Email: {{ user.email }}</p>
-<form method="POST">
-    <input id="jwt_csrf_token" name="jwt_csrf_token" type="hidden" value="{{ jwt_csrf_token }}">
-    {{ form.hidden_tag() }}
-    {{ form.username.label }}
-    {{ form.username }}
-    {{ form.public_profile.label }}
-    {{ form.public_profile }}
-    <button type="submit">Update</button>
-</form>
+<ul>
+    <li><a href="{{ url_for('user.password') }}">Password</a></li>
+</ul>
 {% endblock %}

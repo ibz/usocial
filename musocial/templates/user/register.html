@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
     {% if success %}
-        <p>Success! Please confirm your email in order to continue!</p>
+        <p>Success!</p>
     {% else %}
         <form method="POST">
             {{ form.hidden_tag() }}
-            {{ form.email.label }}
-            {{ form.email }}
+            {{ form.username.label }}
+            {{ form.username }}
             <button type="submit">Register</button>
         </form>
         <div>

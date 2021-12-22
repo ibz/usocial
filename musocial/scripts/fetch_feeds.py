@@ -19,7 +19,7 @@ def fetch_feed(feed):
             new_entries_count = len(new_entries)
             for user in models.User.query.join(models.Subscription).join(models.Feed).filter(models.Subscription.feed == feed):
                 users_count += 1
-                print("Adding %s new entries to %s" % (new_entries_count, user.email))
+                print("Adding %s new entries to %s" % (new_entries_count, user.username))
                 for entry in new_entries:
                     db.session.add(models.UserEntry(user=user, entry=entry))
     db.session.add(feed)
