@@ -4,7 +4,7 @@ from flask import Flask, redirect, url_for
 from flask.cli import with_appcontext
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from flask_jwt_extended import JWTManager, verify_jwt_in_request
+from flask_jwt_extended import create_access_token, JWTManager, set_access_cookies, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
@@ -69,8 +69,11 @@ def no_jwt():
     return redirect(url_for('user.login'))
 
 @jwt.expired_token_loader
-def jwt_token_expired():
-    return redirect(url_for('user.refresh_jwt'))
+def jwt_token_expired(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    response = redirect(url_for('feed.news'))
+    set_access_cookies(response, create_access_token(identity=identity))
+    return response
 
 @jwt.user_lookup_loader
 def load_user(_jwt_header, jwt_data):

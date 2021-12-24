@@ -4,7 +4,7 @@ from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
 from musocial import forms, models
-from musocial.main import app, db, jwt_required, refresh_jwt_required
+from musocial.main import app, db, jwt_required
 
 user_blueprint = Blueprint('user', __name__)
 
@@ -93,11 +93,4 @@ def password():
 def logout():
     response = redirect(url_for('feed.news'))
     unset_jwt_cookies(response)
-    return response
-
-@user_blueprint.route('/refresh-jwt', methods=['GET'])
-@refresh_jwt_required
-def refresh_jwt():
-    response = redirect(url_for('feed.news'))
-    set_access_cookies(response, create_access_token(identity=get_jwt_identity()))
     return response
