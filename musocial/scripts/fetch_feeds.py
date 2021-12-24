@@ -17,7 +17,7 @@ def fetch_feed(feed):
             db.session.add(item)
         if new_items:
             new_items_count = len(new_items)
-            for user in models.User.query.join(models.Subscription).join(models.Feed).filter(models.Subscription.feed == feed):
+            for user in models.User.query.join(models.Group).join(models.FeedGroup).join(models.Feed).filter(models.FeedGroup.feed == feed):
                 users_count += 1
                 print("Adding %s new items to %s" % (new_items_count, user.username))
                 for item in new_items:

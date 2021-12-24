@@ -16,9 +16,9 @@ class User(db.Model):
     username = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255))
     registered_on = db.Column(db.DateTime, nullable=False)
-    public_profile = db.Column(db.Boolean, nullable=False, default=False)
+    public = db.Column(db.Boolean, nullable=False, default=False)
 
-    subscriptions = db.relationship('Subscription', backref='user')
+    groups = db.relationship('Group', backref='user')
 
     def __init__(self, username):
         self.username = username
@@ -35,17 +35,24 @@ class User(db.Model):
             return False
         return bcrypt.check_password_hash(self.password, password)
 
+class Group(db.Model):
+    __tablename__ = 'groups'
+
+    DEFAULT_GROUP = 'Default'
+    PODCASTS_GROUP = 'Podcasts'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    name = db.Column(db.String(1000))
+    public = db.Column(db.Boolean, nullable=False, default=False)
+
 class Feed(db.Model):
     __tablename__ = 'feeds'
-
-    FEED_TYPE_BASIC = 1
-    FEED_TYPE_PODCAST = 2
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     url = db.Column(db.String(1000), unique=True, nullable=False)
     homepage_url = db.Column(db.String(1000), nullable=False)
     title = db.Column(db.String(1000), nullable=True)
-    feed_type = db.Column(db.Integer, nullable=False, default=FEED_TYPE_BASIC)
     updated_at = db.Column(db.DateTime, nullable=True)
     fetched_at = db.Column(db.DateTime, nullable=True)
     fetch_failed = db.Column(db.Boolean, default=False)
@@ -93,12 +100,13 @@ class Feed(db.Model):
                 updated_items.append(item)
         return new_items, updated_items
 
-class Subscription(db.Model):
-    __tablename__ = 'subscriptions'
+class FeedGroup(db.Model):
+    __tablename__ = 'feed_groups'
 
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id), primary_key=True)
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id), primary_key=True)
     feed = db.relationship(Feed)
+    group_id = db.Column(db.Integer, db.ForeignKey(Group.id), primary_key=True)
+    group = db.relationship(Group)
 
 class Item(db.Model):
     __tablename__ = 'items'

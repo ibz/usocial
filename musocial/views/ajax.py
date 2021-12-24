@@ -39,15 +39,23 @@ def delete():
 def follow():
     feed_id = request.form['feed_id']
     affect_news = bool(int(request.form['affect_news']))
-    if not bool(int(request.form['value'])):
-        models.Subscription.query.filter_by(user=current_user, feed_id=feed_id).delete()
+    if not bool(int(request.form['value'])): # unfollow
+        for fg in models.FeedGroup.query \
+            .join(models.Group) \
+            .filter(models.Group.user == current_user, models.FeedGroup.feed_id == feed_id):
+            db.session.delete(fg)
         if affect_news:
             for ue in models.UserItem.query \
                 .join(models.Item) \
                 .filter(models.UserItem.user==current_user, models.UserItem.liked==False, models.Item.feed_id==feed_id):
                 db.session.delete(ue)
     else:
-        db.session.add(models.Subscription(user=current_user, feed_id=feed_id))
+        group = models.Group.query.filter_by(models.Group.user == current_user, models.Group.name == models.Group.DEFAULT_GROUP).one_or_none()
+        if not group:
+            group = models.Group(user=current_user, name=models.Group.DEFAULT_GROUP)
+            db.session.add(group)
+            db.session.commit()
+        db.session.add(models.FeedGroup(group=group, feed_id=feed_id))
         if affect_news:
             existing_item_ids = {ue.item_id for ue in models.UserItem.query.join(models.Item).filter(models.UserItem.user==current_user, models.Item.feed_id==feed_id)}
             for item in models.Feed.query.filter_by(id=feed_id).first().items:
@@ -64,11 +72,15 @@ def follow_podcast():
         feed = models.Feed(
             url=request.form['url'],
             homepage_url=request.form['homepage_url'],
-            title=request.form['title'],
-            feed_type=models.Feed.FEED_TYPE_PODCAST)
+            title=request.form['title'])
         db.session.add(feed)
         db.session.commit()
-    db.session.add(models.Subscription(user=current_user, feed_id=feed.id))
+    group = models.Group.query.filter(models.Group.user == current_user, models.Group.name == models.Group.PODCASTS_GROUP).one_or_none()
+    if not group:
+        group = models.Group(user=current_user, name=models.Group.PODCASTS_GROUP)
+        db.session.add(group)
+        db.session.commit()
+    db.session.add(models.FeedGroup(group=group, feed_id=feed.id))
     db.session.commit()
     return jsonify(ok=True)
 
@@ -77,6 +89,7 @@ def follow_podcast():
 def unfollow_podcast():
     feed = models.Feed.query.filter_by(url=request.form['url']).one_or_none()
     if feed:
-        models.Subscription.query.filter_by(user=current_user, feed=feed).delete()
+        for fg in models.FeedGroup.query.join(models.Group).filter(models.Group.user == current_user, models.FeedGroup.feed == feed):
+            db.session.delete(fg)
         db.session.commit()
     return jsonify(ok=True)

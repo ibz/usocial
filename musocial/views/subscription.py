@@ -22,8 +22,9 @@ subscription_blueprint = Blueprint('subscription', __name__)
 def subscriptions():
     feeds = []
     q = db.session.query(m.Feed, func.count(m.Item.id), func.max(m.Item.updated_at)) \
-                        .join(m.Subscription) \
-                        .filter(m.Subscription.user_id == current_user.id) \
+                        .join(m.FeedGroup) \
+                        .join(m.Group) \
+                        .filter(m.Group.user == current_user) \
                         .outerjoin(m.Item) \
                         .group_by(m.Feed) \
                         .order_by(func.max(m.Item.updated_at).desc()).all()
@@ -65,8 +66,12 @@ def follow_website():
         for item in new_items + updated_items:
             db.session.add(item)
         db.session.commit()
-        subscription = m.Subscription(user_id=current_user.id, feed_id=feed.id)
-        db.session.add(subscription)
+        group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.DEFAULT_GROUP).one_or_none()
+        if not group:
+            group = m.Group(user=current_user, name=m.Group.DEFAULT_GROUP)
+            db.session.add(group)
+            db.session.commit()
+        db.session.add(m.FeedGroup(group=group, feed_id=feed.id))
         db.session.commit()
         for item in new_items + updated_items:
             db.session.add(m.UserItem(user=current_user, item=item))
@@ -86,7 +91,7 @@ def podcast_search():
         return render_template('podcast_search.html', user=current_user,
             form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
-    q = m.Feed.query.join(m.Subscription).filter(m.Subscription.user_id == current_user.id).all()
+    q = m.Feed.query.join(m.FeedGroup).join(m.Group).filter(m.Group.user == current_user, m.Group.name == m.Group.PODCASTS_GROUP).all()
     subscribed_urls = {f.url for f in q}
     index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
     result = index.search(request.form['keywords'])
