@@ -81,6 +81,20 @@
                 }
             );
         }
+        function followPodcast(podcastindex_id, url, homepage_url, title, csrf_token) {
+            doPost("{{ url_for('ajax.follow_podcast') }}", `url=${url}&homepage_url=${homepage_url}&title=${title}`, csrf_token,
+                function() {
+                    replaceClass(`podcast-${podcastindex_id}`, `feed-followed-0`, `feed-followed-1`);
+                }
+            );
+        }
+        function unfollowPodcast(podcastindex_id, url, csrf_token) {
+            doPost("{{ url_for('ajax.unfollow_podcast') }}", `url=${url}`, csrf_token,
+                function() {
+                    replaceClass(`podcast-${podcastindex_id}`, `feed-followed-1`, `feed-followed-0`);
+                }
+            );
+        }
         </script>
     </head>
     <body>

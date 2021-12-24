@@ -17,3 +17,6 @@ class FollowWebsiteForm(FlaskForm):
 
 class FollowFeedForm(FlaskForm):
    url = SelectField("Feed")
+
+class SearchPodcastForm(FlaskForm):
+   keywords = StringField("Keywords")

@@ -38,10 +38,14 @@ class User(db.Model):
 class Feed(db.Model):
     __tablename__ = 'feeds'
 
+    FEED_TYPE_BASIC = 1
+    FEED_TYPE_PODCAST = 2
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     url = db.Column(db.String(1000), unique=True, nullable=False)
     homepage_url = db.Column(db.String(1000), nullable=False)
     title = db.Column(db.String(1000), nullable=True)
+    feed_type = db.Column(db.Integer, nullable=False, default=FEED_TYPE_BASIC)
     updated_at = db.Column(db.DateTime, nullable=True)
     fetched_at = db.Column(db.DateTime, nullable=True)
     fetch_failed = db.Column(db.Boolean, default=False)

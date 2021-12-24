@@ -55,3 +55,28 @@ def follow():
                     db.session.add(models.UserEntry(user=current_user, entry=entry))
     db.session.commit()
     return jsonify(ok=True)
+
+@ajax_blueprint.route('/follow-podcast', methods=['POST'])
+@jwt_required
+def follow_podcast():
+    feed = models.Feed.query.filter_by(url=request.form['url']).one_or_none()
+    if not feed:
+        feed = models.Feed(
+            url=request.form['url'],
+            homepage_url=request.form['homepage_url'],
+            title=request.form['title'],
+            feed_type=models.Feed.FEED_TYPE_PODCAST)
+        db.session.add(feed)
+        db.session.commit()
+    db.session.add(models.Subscription(user=current_user, feed_id=feed.id))
+    db.session.commit()
+    return jsonify(ok=True)
+
+@ajax_blueprint.route('/unfollow-podcast', methods=['POST'])
+@jwt_required
+def unfollow_podcast():
+    feed = models.Feed.query.filter_by(url=request.form['url']).one_or_none()
+    if feed:
+        models.Subscription.query.filter_by(user=current_user, feed=feed).delete()
+        db.session.commit()
+    return jsonify(ok=True)

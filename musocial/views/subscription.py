@@ -5,10 +5,15 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_jwt_extended import current_user
 import requests
 from sqlalchemy import func
+from urllib.parse import urlparse
+
+import podcastindex
 
 from musocial import forms, models as m
 from musocial.parser import extract_feed_links, parse_feed
 from musocial.main import db, jwt_required
+
+import config
 
 subscription_blueprint = Blueprint('subscription', __name__)
 
@@ -73,3 +78,29 @@ def follow_website():
         return render_template('subscription/follow-website.html',
             user=current_user,
             form=form, jwt_csrf_token=request.cookies.get('csrf_access_token'))
+
+@subscription_blueprint.route('/podcast-search', methods=['GET', 'POST'])
+@jwt_required
+def podcast_search():
+    if request.method == 'GET':
+        return render_template('podcast_search.html', user=current_user,
+            form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
+
+    q = m.Feed.query.join(m.Subscription).filter(m.Subscription.user_id == current_user.id).all()
+    subscribed_urls = {f.url for f in q}
+    index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
+    result = index.search(request.form['keywords'])
+    feeds = [{'id': f['id'],
+              'url': f['url'],
+              'title': f['title'],
+              'domain': urlparse(f['link']).netloc,
+              'homepage_url': f['link'],
+              'description': f['description'],
+              'image': f['artwork'],
+              'categories': [c for c in (f['categories'] or {}).values()],
+              'subscribed': f['url'] in subscribed_urls}
+             for f in result['feeds']]
+    return render_template('podcast_search.html',
+        user=current_user,
+        podcastindex_feeds=feeds,
+        form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))

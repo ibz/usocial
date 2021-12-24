@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div>
+    <form action="{{ url_for('subscription.podcast_search') }}" method="POST">
+        <input id="jwt_csrf_token" name="jwt_csrf_token" type="hidden" value="{{ jwt_csrf_token }}" />
+        {{ form.hidden_tag() }}
+        {{ form.keywords.label }}
+        {{ form.keywords }}
+        <button type="submit">Find!</button>
+    </form>
+</div>
+<table>
+    {% for feed in podcastindex_feeds %}
+        <tr class="main-row">
+            <td>
+                <img src="{{ feed.image }}" width="100" height="100" />
+            </td>
+            <td id="podcast-{{ feed.id }}" class="feed-followed-{% if feed.subscribed %}1{% else %}0{% endif %}">
+                {{ feed.title }} (<a target="_blank" href="{{ feed.homepage_url }}">{{ feed.domain }}</a>)
+                <span class="unfollow-link">
+                    (<a onclick="unfollowPodcast({{ feed.id }}, '{{ feed.url }}', '{{ csrf_token() }}'); return false;" href="">unfollow</a>)
+                </span>
+                <span class="follow-link">
+                    (<a onclick="followPodcast({{ feed.id }}, '{{ feed.url }}', '{{ feed.homepage_url }}', '{{ feed.title }}', '{{ csrf_token() }}'); return false;" href="">follow</a>)
+                </span>
+                <div class="extra-row">
+                    {% for cat in feed.categories %}{{ cat }} {% endfor %}
+                </div>
+            </td>
+        </tr>
+        <tr><td></td></tr>
+    {% endfor %}
+</table>
+{% endblock %}
