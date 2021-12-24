@@ -50,7 +50,7 @@ class Feed(db.Model):
     fetched_at = db.Column(db.DateTime, nullable=True)
     fetch_failed = db.Column(db.Boolean, default=False)
 
-    entries = db.relationship('Entry')
+    items = db.relationship('Item')
 
     @property
     def domain_name(self):
@@ -64,7 +64,7 @@ class Feed(db.Model):
         self.fetch_failed = False
         feed_domain = urlparse(self.url).netloc
         urls = {strip_protocol(self.url)}
-        for e in parsed_feed['entries']:
+        for e in parsed_feed['items']:
             url = strip_protocol(e['url'])
             if url.startswith(feed_domain):
                 urls.add(url)
@@ -73,25 +73,25 @@ class Feed(db.Model):
         self.title = parsed_feed['title']
         self.updated_at = parsed_feed['updated_at']
 
-    def update_entries(self, parsed_feed):
-        new_entry_urls = set()
-        new_entries = []
-        updated_entries = []
-        for e in parsed_feed['entries']:
-            entry = Entry.query.filter_by(url=e['url']).first()
-            if not entry:
-                if e['url'] not in new_entry_urls:
-                    entry = Entry(feed_id=self.id, url=e['url'], title=e['title'],
+    def update_items(self, parsed_feed):
+        new_item_urls = set()
+        new_items = []
+        updated_items = []
+        for e in parsed_feed['items']:
+            item = Item.query.filter_by(url=e['url']).first()
+            if not item:
+                if e['url'] not in new_item_urls:
+                    item = Item(feed_id=self.id, url=e['url'], title=e['title'],
                         content_from_feed=e['content'],
                         updated_at=e['updated_at'])
-                    new_entries.append(entry)
-                    new_entry_urls.add(e['url'])
-            elif entry.title != e['title'] or entry.updated_at != e['updated_at']:
-                entry.title = e['title']
-                entry.content_from_feed = e['content']
-                entry.updated_at = e['updated_at']
-                updated_entries.append(entry)
-        return new_entries, updated_entries
+                    new_items.append(item)
+                    new_item_urls.add(e['url'])
+            elif item.title != e['title'] or item.updated_at != e['updated_at']:
+                item.title = e['title']
+                item.content_from_feed = e['content']
+                item.updated_at = e['updated_at']
+                updated_items.append(item)
+        return new_items, updated_items
 
 class Subscription(db.Model):
     __tablename__ = 'subscriptions'
@@ -100,8 +100,8 @@ class Subscription(db.Model):
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id), primary_key=True)
     feed = db.relationship(Feed)
 
-class Entry(db.Model):
-    __tablename__ = 'entries'
+class Item(db.Model):
+    __tablename__ = 'items'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
@@ -118,11 +118,11 @@ class Entry(db.Model):
     def relative_date(self):
         return format_timedelta(self.updated_at - datetime.now(), add_direction=True)
 
-class UserEntry(db.Model):
-    __tablename__ = 'user_entries'
+class UserItem(db.Model):
+    __tablename__ = 'user_items'
 
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), primary_key=True)
     user = db.relationship(User)
-    entry_id = db.Column(db.Integer, db.ForeignKey(Entry.id), primary_key=True)
-    entry = db.relationship(Entry)
+    item_id = db.Column(db.Integer, db.ForeignKey(Item.id), primary_key=True)
+    item = db.relationship(Item)
     liked = db.Column(db.Boolean, nullable=False, default=False)

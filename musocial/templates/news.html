@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
 <table>
-        {% for entry in entries %}
-            {% if entry.user_id %}
-                {% set user_entry = entry %}
-                {% set entry = user_entry.entry %}
-                <tr><td id="entry-{{ entry.id }}" class="entry-deleted-0 entry-liked-{% if user_entry.liked %}1{% else %}0{% endif %}">
-                    <a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}
+        {% for item in items %}
+            {% if item.user_id %}
+                {% set user_item = item %}
+                {% set item = user_item.item %}
+                <tr><td id="item-{{ item.id }}" class="item-deleted-0 item-liked-{% if user_item.liked %}1{% else %}0{% endif %}">
+                    <a href="{{ item.url }}">{{ item.title }}</a> ({{ item.domain_name }}), {{ item.relative_date }}
                     <span class="unlike-link">
-                        (<a onclick="likeEntry({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unlike</a>)
+                        (<a onclick="likeItem({{ item.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unlike</a>)
                     </span>
                     <span class="like-link">
-                        (<a onclick="likeEntry({{ entry.id }}, 1, '{{ csrf_token() }}'); return false;" href="">like</a>)
+                        (<a onclick="likeItem({{ item.id }}, 1, '{{ csrf_token() }}'); return false;" href="">like</a>)
                     </span>
                     <span class="undelete-link">
-                        (<a onclick="deleteEntry({{ entry.id }}, 0, '{{ csrf_token() }}'); return false;" href="">undelete</a>)
+                        (<a onclick="deleteItem({{ item.id }}, 0, '{{ csrf_token() }}'); return false;" href="">undelete</a>)
                     </span>
                     <span class="delete-link">
-                        (<a onclick="deleteEntry({{ entry.id }}, 1, '{{ csrf_token() }}'); return false;" href="">delete</a>)
+                        (<a onclick="deleteItem({{ item.id }}, 1, '{{ csrf_token() }}'); return false;" href="">delete</a>)
                     </span>
                 </td></tr>
             {% else %}
-                <tr><td id="entry-{{ entry.id }}">
-                    <a href="{{ entry.url }}">{{ entry.title }}</a> ({{ entry.domain_name }}), {{ entry.relative_date }}
+                <tr><td id="item-{{ item.id }}">
+                    <a href="{{ item.url }}">{{ item.title }}</a> ({{ item.domain_name }}), {{ item.relative_date }}
                 </td></tr>
             {% endif %}
         {% endfor %}

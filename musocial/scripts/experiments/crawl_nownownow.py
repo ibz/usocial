@@ -43,17 +43,17 @@ def parse_now_page(url, content):
         if not parsed_feed:
             print("FEED FAIL")
             continue
-        if not parsed_feed['entries']:
+        if not parsed_feed['items']:
             print("EMPTY FEED")
             continue
         feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()
         if parsed_feed:
-            new_entries, updated_entries = feed.update_entries(parsed_feed)
+            new_items, updated_items = feed.update_items(parsed_feed)
             db.session.add(feed)
-            for entry in new_entries + updated_entries:
-                db.session.add(entry)
+            for item in new_items + updated_items:
+                db.session.add(item)
             db.session.commit()
         return # NOTE: we only save the 1st valid feed
 

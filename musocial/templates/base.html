@@ -5,18 +5,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <title>muSocial - the anti-social network</title>
         <style type="text/css">
-            .entry-liked-1.entry-deleted-0 { background-color: #D3DFC1; }
-            .entry-deleted-1 { background-color: #DAB2BA; }
+            .item-liked-1.item-deleted-0 { background-color: #D3DFC1; }
+            .item-deleted-1 { background-color: #DAB2BA; }
             #navbar { background-color: #C4E38A; }
             .error { background-color: #DAB2BA; }
-            .entry-liked-1 .like-link { display: none; }
-            .entry-liked-0 .like-link { display: inline; }
-            .entry-liked-1 .unlike-link { display: inline; }
-            .entry-liked-0 .unlike-link { display: none; }
-            .entry-deleted-1 .delete-link { display: none; }
-            .entry-deleted-0 .delete-link { display: inline; }
-            .entry-deleted-1 .undelete-link { display: inline; }
-            .entry-deleted-0 .undelete-link { display: none; }
+            .item-liked-1 .like-link { display: none; }
+            .item-liked-0 .like-link { display: inline; }
+            .item-liked-1 .unlike-link { display: inline; }
+            .item-liked-0 .unlike-link { display: none; }
+            .item-deleted-1 .delete-link { display: none; }
+            .item-deleted-0 .delete-link { display: inline; }
+            .item-deleted-1 .undelete-link { display: inline; }
+            .item-deleted-0 .undelete-link { display: none; }
             .feed-followed-1 .follow-link { display: none; }
             .feed-followed-0 .follow-link { display: inline; }
             .feed-followed-1 .unfollow-link { display: inline; }
@@ -56,25 +56,25 @@
             xhr.send(`${data}&csrf_token=${csrf_token}&jwt_csrf_token=${token}`);
             return false;
         }
-        function likeEntry(entry_id, value, csrf_token) {
-            doPost("{{ url_for('ajax.like') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
+        function likeItem(item_id, value, csrf_token) {
+            doPost("{{ url_for('ajax.like') }}", `item_id=${item_id}&value=${value}`, csrf_token,
                 function() {
-                    replaceClass(`entry-${entry_id}`, `entry-liked-${1-value}`, `entry-liked-${value}`);
+                    replaceClass(`item-${item_id}`, `item-liked-${1-value}`, `item-liked-${value}`);
                     if (value) {
-                        replaceClass(`entry-${entry_id}`, `entry-deleted-1`, `entry-deleted-0`);
+                        replaceClass(`item-${item_id}`, `item-deleted-1`, `item-deleted-0`);
                     }
                 }
             );
         }
-        function deleteEntry(entry_id, value, csrf_token) {
-            doPost("{{ url_for('ajax.delete') }}", `entry_id=${entry_id}&value=${value}`, csrf_token,
+        function deleteItem(item_id, value, csrf_token) {
+            doPost("{{ url_for('ajax.delete') }}", `item_id=${item_id}&value=${value}`, csrf_token,
                 function() {
-                    replaceClass(`entry-${entry_id}`, `entry-deleted-${1-value}`, `entry-deleted-${value}`);
+                    replaceClass(`item-${item_id}`, `item-deleted-${1-value}`, `item-deleted-${value}`);
                 }
             );
         }
         function followFeed(feed_id, value, csrf_token) {
-            var affect_news = confirm(value ? "Do you want to also import old entries into your news feed?" : "Do you want to also delete existing entries from your news feed (liked entries will not be deleted)?") ? 1 : 0;
+            var affect_news = confirm(value ? "Do you want to also import old items into your news feed?" : "Do you want to also delete existing items from your news feed (liked items will not be deleted)?") ? 1 : 0;
             doPost("{{ url_for('ajax.follow') }}", `feed_id=${feed_id}&value=${value}&affect_news=${affect_news}`, csrf_token,
                 function() {
                     replaceClass(`feed-${feed_id}`, `feed-followed-${1-value}`, `feed-followed-${value}`);

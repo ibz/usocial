@@ -29,17 +29,17 @@ def sort_coo(coo_matrix):
 
 def main():
     stop_words = set(stopwords.words("english"))
-    feed_entries = {}
+    feed_items = {}
     for feed in models.Feed.query.all():
-        for entry in feed.entries:
-            if entry.content_from_feed:
+        for item in feed.items:
+            if item.content_from_feed:
                 # TODO: check lang
-                feed_entries.setdefault(feed.id, []).append(entry)
+                feed_items.setdefault(feed.id, []).append(item)
     corpus = {}
-    for feed_id, entries in feed_entries.items():
+    for feed_id, items in feed_items.items():
         feed_texts = []
-        for entry in entries:
-            soup = BeautifulSoup(entry.content_from_feed, 'html.parser')
+        for item in items:
+            soup = BeautifulSoup(item.content_from_feed, 'html.parser')
             text = re.sub('[^a-zA-Z]', ' ', soup.text)
             text = text.lower()
             text = re.sub("&lt;/?.*?&gt;", " &lt;&gt; ", text)

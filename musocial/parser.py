@@ -37,11 +37,11 @@ def parse_rss_item(item):
             'content': description_el.text if description_el else None,
             'updated_at': parse_datetime(item.find('pubDate').text)}
 
-def parse_feed_entry(entry):
-    return {'title': entry['title'],
-            'url': entry['link'],
-            'content': entry['content'][0]['value'] if entry.get('content') else entry.get('summary'),
-            'updated_at': parse_feed_datetime(entry.get('updated_parsed'))}
+def parse_feed_item(item):
+    return {'title': item['title'],
+            'url': item['link'],
+            'content': item['content'][0]['value'] if item.get('content') else item.get('summary'),
+            'updated_at': parse_feed_datetime(item.get('updated_parsed'))}
 
 def parse_feed(url):
     try:
@@ -61,7 +61,7 @@ def parse_feed(url):
     if f and f['feed'] and f['feed'].get('title') and f['feed'].get('link'):
         return {'title': f['feed']['title'],
                 'updated_at': parse_feed_datetime(f['feed'].get('updated_parsed')),
-                'entries': [parse_feed_entry(e) for e in f['entries'] if e and e.get('link') and e.get('title')]}
+                'items': [parse_feed_item(e) for e in f['entries'] if e and e.get('link') and e.get('title')]}
 
     try:
         root = fromstring(content)
@@ -80,7 +80,7 @@ def parse_feed(url):
     date_el = root.find('channel/lastBuildDate')
     return {'title': title_el.text,
             'updated_at': parse_datetime(date_el.text) if date_el else None,
-            'entries': [parse_rss_item(item) for item in root.findall('channel/item')]}
+            'items': [parse_rss_item(item) for item in root.findall('channel/item')]}
 
 def extract_feed_links(url, content):
     parsed_url = urlparse(url)

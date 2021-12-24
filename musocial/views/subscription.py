@@ -21,16 +21,16 @@ subscription_blueprint = Blueprint('subscription', __name__)
 @jwt_required
 def subscriptions():
     feeds = []
-    q = db.session.query(m.Feed, func.count(m.Entry.id), func.max(m.Entry.updated_at)) \
+    q = db.session.query(m.Feed, func.count(m.Item.id), func.max(m.Item.updated_at)) \
                         .join(m.Subscription) \
                         .filter(m.Subscription.user_id == current_user.id) \
-                        .outerjoin(m.Entry) \
+                        .outerjoin(m.Item) \
                         .group_by(m.Feed) \
-                        .order_by(func.max(m.Entry.updated_at).desc()).all()
-    for f, entry_count, last_entry_date in q:
+                        .order_by(func.max(m.Item.updated_at).desc()).all()
+    for f, item_count, last_item_date in q:
         f.subscribed = True
-        f.entry_count = entry_count
-        f.last_entry_relative = format_timedelta(last_entry_date - datetime.now(), add_direction=True) if last_entry_date else 'never'
+        f.item_count = item_count
+        f.last_item_relative = format_timedelta(last_item_date - datetime.now(), add_direction=True) if last_item_date else 'never'
         feeds.append(f)
     return render_template('subscription/feeds.html', feeds=feeds, user=current_user)
 
@@ -60,16 +60,16 @@ def follow_website():
         feed.update(parsed_feed)
         db.session.add(feed)
         db.session.commit()
-        new_entries, updated_entries = feed.update_entries(parsed_feed)
+        new_items, updated_items = feed.update_items(parsed_feed)
         db.session.add(feed)
-        for entry in new_entries + updated_entries:
-            db.session.add(entry)
+        for item in new_items + updated_items:
+            db.session.add(item)
         db.session.commit()
         subscription = m.Subscription(user_id=current_user.id, feed_id=feed.id)
         db.session.add(subscription)
         db.session.commit()
-        for entry in new_entries + updated_entries:
-            db.session.add(m.UserEntry(user=current_user, entry=entry))
+        for item in new_items + updated_items:
+            db.session.add(m.UserItem(user=current_user, item=item))
         db.session.commit()
         return redirect(url_for('subscription.subscriptions'))
     else:

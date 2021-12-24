@@ -9,22 +9,22 @@ def fetch_feed(feed):
     print("Fetching %s" % feed.url)
     parsed_feed = parse_feed(feed.url)
     feed.update(parsed_feed)
-    new_entries_count = 0
+    new_items_count = 0
     users_count = 0
     if parsed_feed:
-        new_entries, updated_entries = feed.update_entries(parsed_feed)
-        for entry in new_entries + updated_entries:
-            db.session.add(entry)
-        if new_entries:
-            new_entries_count = len(new_entries)
+        new_items, updated_items = feed.update_items(parsed_feed)
+        for item in new_items + updated_items:
+            db.session.add(item)
+        if new_items:
+            new_items_count = len(new_items)
             for user in models.User.query.join(models.Subscription).join(models.Feed).filter(models.Subscription.feed == feed):
                 users_count += 1
-                print("Adding %s new entries to %s" % (new_entries_count, user.username))
-                for entry in new_entries:
-                    db.session.add(models.UserEntry(user=user, entry=entry))
+                print("Adding %s new items to %s" % (new_items_count, user.username))
+                for item in new_items:
+                    db.session.add(models.UserItem(user=user, item=item))
     db.session.add(feed)
     db.session.commit()
-    return new_entries_count, users_count
+    return new_items_count, users_count
 
 def main():
     feed_id = None
@@ -42,8 +42,8 @@ def main():
         feeds = feeds.filter(models.Feed.url.contains(url_contains))
 
     for feed in feeds:
-        new_entries, users = fetch_feed(feed)
-        print(f"{feed.url} - New Entries: {new_entries} - Users: {users}")
+        new_items, users = fetch_feed(feed)
+        print(f"{feed.url} - New items: {new_items} - Users: {users}")
     print("Fetch Feeds DONE")
 
 if __name__ == '__main__':
