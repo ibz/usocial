@@ -19,7 +19,7 @@ dictConfig({
         }
     },
     'root': {
-        'level': 'INFO',
+        'level': 'DEBUG',
     }
 })
 
@@ -32,6 +32,8 @@ class MyFlask(Flask):
         if not self.initialized:
             from musocial.views.ajax import ajax_blueprint
             app.register_blueprint(ajax_blueprint)
+            from musocial.views.api import api_blueprint
+            app.register_blueprint(api_blueprint)
             from musocial.views.feed import feed_blueprint
             app.register_blueprint(feed_blueprint)
             from musocial.views.main import main_blueprint
@@ -48,7 +50,7 @@ app.config.from_object('config')
 app.config.from_pyfile('config.py')
 
 CORS(app)
-CSRFProtect(app)
+csrf = CSRFProtect(app)
 
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
@@ -61,7 +63,7 @@ def create_db():
     db.create_all()
 
     # create the default user here
-    db.session.add(models.User('me'))
+    db.session.add(models.User(models.User.DEFAULT_USERNAME))
     db.session.commit()
 
 @jwt.token_verification_failed_loader

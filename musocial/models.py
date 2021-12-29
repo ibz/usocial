@@ -1,4 +1,5 @@
 from datetime import datetime
+import hashlib
 import os
 import os.path
 from urllib.parse import urlparse
@@ -12,9 +13,12 @@ from musocial.parser import strip_protocol
 class User(db.Model):
     __tablename__ = 'users'
 
+    DEFAULT_USERNAME = 'me'
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(255), unique=True, nullable=False)
     password = db.Column(db.String(255))
+    fever_api_key = db.Column(db.String(255))
     registered_on = db.Column(db.DateTime, nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -22,6 +26,7 @@ class User(db.Model):
 
     def __init__(self, username):
         self.username = username
+        self.fever_api_key = hashlib.md5(("%s:" % username).encode('utf-8')).hexdigest()
         self.registered_on = datetime.now()
 
     def set_password(self, password):
@@ -29,6 +34,7 @@ class User(db.Model):
             self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         else:
             self.password = None
+        self.fever_api_key = hashlib.md5(("%s:%s" % (username, password or "")).encode('utf-8')).hexdigest()
 
     def verify_password(self, password):
         if not self.password:
