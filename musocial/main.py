@@ -34,12 +34,12 @@ class MyFlask(Flask):
             app.register_blueprint(ajax_blueprint)
             from musocial.views.api import api_blueprint
             app.register_blueprint(api_blueprint)
-            from musocial.views.feed import feed_blueprint
-            app.register_blueprint(feed_blueprint)
+            from musocial.views.item import item_blueprint
+            app.register_blueprint(item_blueprint)
             from musocial.views.main import main_blueprint
             app.register_blueprint(main_blueprint)
-            from musocial.views.subscription import subscription_blueprint
-            app.register_blueprint(subscription_blueprint)
+            from musocial.views.feed import feed_blueprint
+            app.register_blueprint(feed_blueprint)
             from musocial.views.user import user_blueprint
             app.register_blueprint(user_blueprint)
             self.initialized = True
@@ -73,7 +73,7 @@ def no_jwt():
 @jwt.expired_token_loader
 def jwt_token_expired(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
-    response = redirect(url_for('feed.news'))
+    response = redirect(url_for('item.index'))
     set_access_cookies(response, create_access_token(identity=identity))
     return response
 

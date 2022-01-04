@@ -5,24 +5,26 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <title>muSocial - the anti-social network</title>
         <style type="text/css">
-            .item-liked-1.item-deleted-0 { background-color: #D3DFC1; }
-            .item-deleted-1 { background-color: #DAB2BA; }
+            .item-liked-1.item-hidden-0 { background-color: #D3DFC1; }
+            .item-hidden-1 { background-color: #DAB2BA; }
             #navbar { background-color: #C4E38A; }
             .error { background-color: #DAB2BA; }
             .item-liked-1 .like-link { display: none; }
             .item-liked-0 .like-link { display: inline; }
             .item-liked-1 .unlike-link { display: inline; }
             .item-liked-0 .unlike-link { display: none; }
-            .item-deleted-1 .delete-link { display: none; }
-            .item-deleted-0 .delete-link { display: inline; }
-            .item-deleted-1 .undelete-link { display: inline; }
-            .item-deleted-0 .undelete-link { display: none; }
+            .item-hidden-1 .hide-link { display: none; }
+            .item-hidden-0 .hide-link { display: inline; }
+            .item-hidden-1 .unhide-link { display: inline; }
+            .item-hidden-0 .unhide-link { display: none; }
             .feed-followed-1 .follow-link { display: none; }
             .feed-followed-0 .follow-link { display: inline; }
             .feed-followed-1 .unfollow-link { display: inline; }
             .feed-followed-0 .unfollow-link { display: none; }
             .main-row { color: black; }
             .extra-row { color: gray; }
+            .left-panel, .right-panel { vertical-align: top; }
+            .left-panel { width: 40%; } .right-panel { width: 60%; }
         </style>
         <script type="text/javascript">
         function getCookie(name) {
@@ -60,22 +62,18 @@
             doPost("{{ url_for('ajax.like') }}", `item_id=${item_id}&value=${value}`, csrf_token,
                 function() {
                     replaceClass(`item-${item_id}`, `item-liked-${1-value}`, `item-liked-${value}`);
-                    if (value) {
-                        replaceClass(`item-${item_id}`, `item-deleted-1`, `item-deleted-0`);
-                    }
                 }
             );
         }
-        function deleteItem(item_id, value, csrf_token) {
-            doPost("{{ url_for('ajax.delete') }}", `item_id=${item_id}&value=${value}`, csrf_token,
+        function hideItem(item_id, value, csrf_token) {
+            doPost("{{ url_for('ajax.hide') }}", `item_id=${item_id}&value=${value}`, csrf_token,
                 function() {
-                    replaceClass(`item-${item_id}`, `item-deleted-${1-value}`, `item-deleted-${value}`);
+                    replaceClass(`item-${item_id}`, `item-hidden-${1-value}`, `item-hidden-${value}`);
                 }
             );
         }
         function followFeed(feed_id, value, csrf_token) {
-            var affect_news = confirm(value ? "Do you want to also import old items into your news feed?" : "Do you want to also delete existing items from your news feed (liked items will not be deleted)?") ? 1 : 0;
-            doPost("{{ url_for('ajax.follow') }}", `feed_id=${feed_id}&value=${value}&affect_news=${affect_news}`, csrf_token,
+            doPost("{{ url_for('ajax.follow') }}", `feed_id=${feed_id}&value=${value}`, csrf_token,
                 function() {
                     replaceClass(`feed-${feed_id}`, `feed-followed-${1-value}`, `feed-followed-${value}`);
                 }
@@ -106,17 +104,12 @@
                     <tr>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('feed.news') }}">News</a> |
-                            <a href="{{ url_for('feed.liked') }}">Liked</a>
+                            <a href="{{ url_for('item.index') }}">feeds</a> |
+                            <a href="{{ url_for('item.liked') }}">liked</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
-                        {% if user %}
-                            <a href="{{ url_for('subscription.subscriptions') }}">Subscriptions</a> |
-                            <a href="{{ url_for('user.me') }}">Me</a>
-                        {% else %}
-                            <a href="{{ url_for('user.login') }}">Log in</a>
-                        {% endif %}
+                        <a href="{% if user %}{{ url_for('user.me') }}{% else %}{{ url_for('user.login') }}{% endif %}">me</a>
                     </td>
                     </tr>
                 </table>

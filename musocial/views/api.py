@@ -38,7 +38,7 @@ def api():
             'url': i.url,
             'html': i.content_from_feed,
             'created_on_time': int(i.updated_at.timestamp()),
-            'is_read': 0,
+            'is_read': int(ui.read),
             'is_saved': int(ui.liked)
             }
             for i, ui in db.session.query(models.Item, models.UserItem).select_from(models.Item).join(models.UserItem).filter(models.UserItem.user == user).all()]

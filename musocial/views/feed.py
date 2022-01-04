@@ -1,26 +1,95 @@
-from flask import Blueprint, render_template
-from flask_jwt_extended import current_user
-from flask_jwt_extended.exceptions import NoAuthorizationError
+from datetime import datetime
 
-from musocial import models
-from musocial.main import jwt_required
+from babel.dates import format_timedelta
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_jwt_extended import current_user
+import requests
+from sqlalchemy import func
+from urllib.parse import urlparse
+
+import podcastindex
+
+from musocial import forms, models as m
+from musocial.parser import extract_feed_links, parse_feed
+from musocial.main import db, jwt_required
+
+import config
 
 feed_blueprint = Blueprint('feed', __name__)
 
-@feed_blueprint.route('/news', methods=['GET'])
+@feed_blueprint.route('/follow-website', methods=['GET', 'POST'])
 @jwt_required
-def news():
-    items = models.UserItem.query \
-        .join(models.Item) \
-        .filter(models.UserItem.user==current_user, models.UserItem.liked==False)
-    items = items.order_by(models.Item.updated_at.desc())
-    return render_template('news.html', items=items, user=current_user)
+def follow_website():
+    if request.method == 'GET':
+        return render_template('follow_website.html', user=current_user,
+            form=forms.FollowWebsiteForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
-@feed_blueprint.route('/liked', methods=['GET'])
+    url = request.form['url']
+    if not '://' in url:
+        url = f"http://{url}"
+    while url.endswith('/'):
+        url = url[:-1]
+
+    r = requests.get(url)
+    alt_links = extract_feed_links(url, r.text)
+    if not alt_links: # NOTE: here we just assumed that "no links" means this is a feed on itself
+        feed_url = request.form['url']
+        parsed_feed = parse_feed(feed_url)
+        if not parsed_feed:
+            flash(f"Cannot parse feed at: {feed_url}")
+            return redirect(url_for('feed.follow_website'))
+        existing_feed = m.Feed.query.filter_by(url=feed_url).one_or_none()
+        feed = existing_feed or m.Feed(url=feed_url)
+        feed.update(parsed_feed)
+        db.session.add(feed)
+        db.session.commit()
+        new_items, updated_items = feed.update_items(parsed_feed)
+        db.session.add(feed)
+        for item in new_items + updated_items:
+            db.session.add(item)
+        db.session.commit()
+        group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.DEFAULT_GROUP).one_or_none()
+        if not group:
+            group = m.Group(user=current_user, name=m.Group.DEFAULT_GROUP)
+            db.session.add(group)
+            db.session.commit()
+        db.session.add(m.FeedGroup(group=group, feed_id=feed.id))
+        db.session.commit()
+        existing_item_ids = {ue.item_id for ue in m.UserItem.query.join(m.Item).filter(m.UserItem.user == current_user, m.Item.feed_id == feed.id)}
+        for item in feed.items:
+            if item.id not in existing_item_ids:
+                db.session.add(m.UserItem(user=current_user, item=item))
+        db.session.commit()
+        return redirect(url_for('item.index'))
+    else:
+        form = forms.FollowFeedForm()
+        form.url.choices = alt_links
+        return render_template('follow_website.html',
+            user=current_user,
+            form=form, jwt_csrf_token=request.cookies.get('csrf_access_token'))
+
+@feed_blueprint.route('/podcast-search', methods=['GET', 'POST'])
 @jwt_required
-def liked():
-    items = models.UserItem.query \
-        .join(models.Item) \
-        .filter(models.UserItem.user==current_user, models.UserItem.liked==True) \
-        .order_by(models.Item.updated_at.desc())
-    return render_template('news.html', items=items, user=current_user)
+def podcast_search():
+    if request.method == 'GET':
+        return render_template('podcast_search.html', user=current_user,
+            form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
+
+    q = m.Feed.query.join(m.FeedGroup).join(m.Group).filter(m.Group.user == current_user, m.Group.name == m.Group.PODCASTS_GROUP).all()
+    subscribed_urls = {f.url for f in q}
+    index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
+    result = index.search(request.form['keywords'])
+    feeds = [{'id': f['id'],
+              'url': f['url'],
+              'title': f['title'],
+              'domain': urlparse(f['link']).netloc,
+              'homepage_url': f['link'],
+              'description': f['description'],
+              'image': f['artwork'],
+              'categories': [c for c in (f['categories'] or {}).values()],
+              'subscribed': f['url'] in subscribed_urls}
+             for f in result['feeds']]
+    return render_template('podcast_search.html',
+        user=current_user,
+        podcastindex_feeds=feeds,
+        form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))

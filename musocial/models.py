@@ -140,3 +140,4 @@ class UserItem(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey(Item.id), primary_key=True)
     item = db.relationship(Item)
     liked = db.Column(db.Boolean, nullable=False, default=False)
+    read = db.Column(db.Boolean, nullable=False, default=False)

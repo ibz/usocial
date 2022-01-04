@@ -27,10 +27,10 @@ def index():
     except NoAuthorizationError:
         default_user = models.User.query.filter_by(id=config.DEFAULT_USER_ID).first()
         if default_user and not default_user.password:
-            response = redirect(url_for('feed.news'))
+            response = redirect(url_for('item.index'))
             set_access_cookies(response, create_access_token(identity=default_user.username))
             set_refresh_cookies(response, create_refresh_token(identity=default_user.username))
             return response
         else:
             return redirect(url_for('user.login'))
-    return redirect(url_for('feed.news'))
+    return redirect(url_for('item.index'))
