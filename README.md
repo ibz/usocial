@@ -1,6 +1,6 @@
 Read more at [musocial.me](http://musocial.me).
 
-**WARNING:** muSocial is experimental software and may not be ready for use by everyone. Database structure may still change without notice.
+**WARNING:** musocial is experimental software and may not be ready for use by everyone. Database structure may still change without notice.
 
 ## Setting up a venv
 
