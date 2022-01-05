@@ -32,15 +32,22 @@ def parse_datetime(dt):
 
 def parse_rss_item(item):
     description_el = item.find('description')
+    enclosure = None
+    enclosure_el = item.find('enclosure')
+    if enclosure_el:
+        enclosure = {'href': enclosure_el.get('url'), 'type': enclosure_el.get('type'), 'length': enclosure_el.get('length')}
     return {'title': item.find('title').text,
             'url': item.find('link').text,
             'content': description_el.text if description_el else None,
+            'enclosure': enclosure,
             'updated_at': parse_datetime(item.find('pubDate').text)}
 
 def parse_feed_item(item):
+    enclosure_links = [l for l in item['links'] if l['rel'] == 'enclosure']
     return {'title': item['title'],
             'url': item['link'],
             'content': item['content'][0]['value'] if item.get('content') else item.get('summary'),
+            'enclosure': enclosure_links[0] if enclosure_links else None,
             'updated_at': parse_feed_datetime(item.get('updated_parsed'))}
 
 def parse_feed(url):

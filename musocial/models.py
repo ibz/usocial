@@ -97,6 +97,10 @@ class Feed(db.Model):
                     item = Item(feed_id=self.id, url=e['url'], title=e['title'],
                         content_from_feed=e['content'],
                         updated_at=e['updated_at'])
+                    if e['enclosure']:
+                        item.enclosure_url = e['enclosure']['href']
+                        item.enclosure_type = e['enclosure']['type']
+                        item.enclosure_length = int(e['enclosure']['length'])
                     new_items.append(item)
                     new_item_urls.add(e['url'])
             elif item.title != e['title'] or item.updated_at != e['updated_at']:
@@ -122,6 +126,9 @@ class Item(db.Model):
     url = db.Column(db.String(1000), unique=True, nullable=False)
     title = db.Column(db.String(1000))
     content_from_feed = db.Column(db.String(10000))
+    enclosure_url = db.Column(db.String(1000))
+    enclosure_type = db.Column(db.String(100))
+    enclosure_length = db.Column(db.Integer)
     updated_at = db.Column(db.DateTime)
 
     @property

@@ -9,15 +9,15 @@ item_blueprint = Blueprint('item', __name__)
 def get_items_feeds(q):
     items = []
     if 'feed_id' in request.args:
-        items = m.UserItem.query \
+        items = [i for i in m.UserItem.query \
             .join(m.Item) \
             .filter(m.UserItem.user == current_user, m.Item.feed_id == int(request.args['feed_id'])) \
-            .filter(q)
+            .filter(q)]
     else:
-        items = m.UserItem.query \
+        items = [i for i in m.UserItem.query \
             .join(m.Item) \
             .filter(m.UserItem.user == current_user) \
-            .filter(q)
+            .filter(q)]
     feeds = []
     for feed, feed_group in db.session.query(m.Feed, m.FeedGroup) \
         .select_from(m.Feed).join(m.FeedGroup).join(m.Group) \
@@ -34,10 +34,12 @@ def get_items_feeds(q):
 @jwt_required
 def index():
     items, feeds = get_items_feeds(m.UserItem.read == False)
-    return render_template('items.html', feeds=feeds, items=items, user=current_user)
+    show_player = items and all(i.item.enclosure_url for i in items)
+    return render_template('items.html', feeds=feeds, items=items, show_player=show_player, user=current_user)
 
 @item_blueprint.route('/items/liked', methods=['GET'])
 @jwt_required
 def liked():
     items, feeds = get_items_feeds(m.UserItem.liked == True)
-    return render_template('items.html', feeds=feeds, items=items, liked=True, user=current_user)
+    show_player = items and all(i.item.enclosure_url for i in items)
+    return render_template('items.html', feeds=feeds, items=items, liked=True, show_player=show_player, user=current_user)

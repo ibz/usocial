@@ -25,6 +25,7 @@
             .extra-row { color: gray; }
             .left-panel, .right-panel { vertical-align: top; }
             .left-panel { width: 40%; } .right-panel { width: 60%; }
+            .item-row:hover, .item-active { background-color: #EBECCD; }
         </style>
         <script type="text/javascript">
         function getCookie(name) {
@@ -40,6 +41,14 @@
                 e.classList.remove(cOld);
             }
             e.classList.add(cNew);
+        }
+        function hasParentWithClass(element, classNames) {
+            for (const className of classNames) {
+                if (element.classList && element.classList.contains(className)) {
+                    return true;
+                }
+            }
+            return element.parentNode && hasParentWithClass(element.parentNode, classNames);
         }
         function doPost(url, data, csrf_token, successCB) {
             var xhr = new XMLHttpRequest();
@@ -58,17 +67,19 @@
             xhr.send(`${data}&csrf_token=${csrf_token}&jwt_csrf_token=${token}`);
             return false;
         }
-        function likeItem(item_id, value, csrf_token) {
-            doPost("{{ url_for('ajax.like') }}", `item_id=${item_id}&value=${value}`, csrf_token,
+        function likeItem(itemId, value) {
+            var item = document.getElementById('item-' + itemId);
+            doPost("{{ url_for('ajax.like') }}", `item_id=${itemId}&value=${value}`, item.dataset.csrf_token,
                 function() {
-                    replaceClass(`item-${item_id}`, `item-liked-${1-value}`, `item-liked-${value}`);
+                    replaceClass(`item-${itemId}`, `item-liked-${1-value}`, `item-liked-${value}`);
                 }
             );
         }
-        function hideItem(item_id, value, csrf_token) {
-            doPost("{{ url_for('ajax.hide') }}", `item_id=${item_id}&value=${value}`, csrf_token,
+        function hideItem(itemId, value) {
+            var item = document.getElementById('item-' + itemId);
+            doPost("{{ url_for('ajax.hide') }}", `item_id=${itemId}&value=${value}`, item.dataset.csrf_token,
                 function() {
-                    replaceClass(`item-${item_id}`, `item-hidden-${1-value}`, `item-hidden-${value}`);
+                    replaceClass(`item-${itemId}`, `item-hidden-${1-value}`, `item-hidden-${value}`);
                 }
             );
         }
@@ -92,6 +103,49 @@
                     replaceClass(`podcast-${podcastindex_id}`, `feed-followed-1`, `feed-followed-0`);
                 }
             );
+        }
+        function playPodcastItem(itemId) {
+            for (const activeItem of document.querySelectorAll('.item-active')) {
+                activeItem.classList.remove('item-active');
+            }
+
+            var item = document.getElementById('item-' + itemId);
+            item.classList.add('item-active');
+
+            var source = document.getElementById('audioSource');
+            source.src = item.dataset.enclosure_url;
+            source.type = item.dataset.enclosure_type;
+
+            var player = document.getElementById('podcastPlayer');
+            player.onended = function() {
+                var currItem = null;
+                var nextItem = null;
+                for (const i of document.querySelectorAll('.item')) {
+                    if (i.dataset.id === itemId) {
+                        hideItem(itemId, 1, i.dataset.csrf_token);
+                        currItem = i;
+                        continue;
+                    }
+                    if (currItem) {
+                        nextItem = i;
+                        break;
+                    }
+                }
+                if (nextItem) {
+                    playPodcastItem(nextItem.dataset.id);
+                } else {
+                    currItem.classList.remove('item-active');
+                }
+            }
+            player.load();
+            player.play();
+        }
+        function itemClick(e, itemId) {
+            if (hasParentWithClass(e.target, ['like-link', 'unlike-link', 'hide-link', 'unhide-link', 'open-link'])) {
+                return;
+            }
+
+            playPodcastItem(itemId);
         }
         </script>
     </head>
