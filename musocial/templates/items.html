@@ -1,27 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
+
 {% if not liked %}
 my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{{ url_for('feed.podcast_search') }}">+ podcast</a>
+{% set base_url = url_for('item.index') %}
+{% else %}
+{% set base_url = url_for('item.liked') %}
 {% endif %}
 <hr />
 <table>
 <tr><td class="left-panel">
 <table>
-    <tr class="main-row">
-        <td id="feed-">
-            <a href="{% if liked %}{{ url_for('item.liked') }}{% else %}{{ url_for('item.index') }}{% endif %}">(all)</a>
+    <tr class="main-row feed-row">
+        <td id="feed-"
+            onclick="feedClick(event, null, '{{ base_url }}'); return false;">
+            (all)
         </td>
     </tr>
     {% for feed in feeds %}
-        <tr class="main-row">
-            <td id="feed-{{ feed.id }}" class="feed-followed-1">
-                <a href="{% if liked %}{{ url_for('item.liked') }}{% else %}{{ url_for('item.index') }}{% endif %}?feed_id={{ feed.id }}">{{ feed.title }}</a>
+        <tr class="main-row feed-row">
+            <td id="feed-{{ feed.id }}"
+                class="feed-followed-1 {% if feed.active %}feed-active {% endif %}"
+                onclick="feedClick(event, {{ feed.id }}, '{{ base_url }}'); return false;">
                 <span class="unfollow-link">
                     (<a onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unfollow</a>)
                 </span>
                 <span class="follow-link">
                     (<a onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href="">follow</a>)
                 </span>
+                {{ feed.title }}
             </td>
         </tr>
         <tr><td></td></tr>
@@ -44,10 +51,8 @@ my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{
                 data-enclosure_url="{{ item.enclosure_url }}"
                 data-enclosure_type="{{ item.enclosure_type }}"
                 data-csrf_token="{{ csrf_token() }}"
-                class="item item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
-                {% if show_player %}
-                    onclick="itemClick(event, '{{ item.id }}'); return false;"
-                {% endif %}>
+                class="item {% if item.enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
+                onclick="itemClick(event, '{{ item.id }}'); return false;">
                 <span class="unlike-link">
                     (<a onclick="likeItem({{ item.id }}, 0); return false;" href="">unlike</a>)
                 </span>

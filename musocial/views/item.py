@@ -27,6 +27,7 @@ def get_items_feeds(q):
             'title': feed.title,
             'url': feed.url,
             'subscribed': 1,
+            'active': int(request.args.get('feed_id') or 0) == feed.id,
         })
     return items, feeds
 

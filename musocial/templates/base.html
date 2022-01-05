@@ -26,6 +26,7 @@
             .left-panel, .right-panel { vertical-align: top; }
             .left-panel { width: 40%; } .right-panel { width: 60%; }
             .item-row:hover, .item-active { background-color: #EBECCD; }
+            .feed-row:hover, .feed-active { background-color: #EBECCD; }
         </style>
         <script type="text/javascript">
         function getCookie(name) {
@@ -50,17 +51,21 @@
             }
             return element.parentNode && hasParentWithClass(element.parentNode, classNames);
         }
-        function doPost(url, data, csrf_token, successCB) {
+        function buildXhr(successCB) {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if (xhr.readyState == 4 && xhr.status == 200)
                 {
                     var resp = JSON.parse(xhr.responseText);
                     if (resp.ok) {
-                        successCB();
+                        successCB(resp);
                     }
                 }
             }
+            return xhr;
+        }
+        function doPost(url, data, csrf_token, successCB) {
+            var xhr = buildXhr(successCB);
             xhr.open('POST', url);
             xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             var token = getCookie('csrf_access_token');
@@ -70,7 +75,7 @@
         function likeItem(itemId, value) {
             var item = document.getElementById('item-' + itemId);
             doPost("{{ url_for('ajax.like') }}", `item_id=${itemId}&value=${value}`, item.dataset.csrf_token,
-                function() {
+                function(_) {
                     replaceClass(`item-${itemId}`, `item-liked-${1-value}`, `item-liked-${value}`);
                 }
             );
@@ -78,28 +83,28 @@
         function hideItem(itemId, value) {
             var item = document.getElementById('item-' + itemId);
             doPost("{{ url_for('ajax.hide') }}", `item_id=${itemId}&value=${value}`, item.dataset.csrf_token,
-                function() {
+                function(_) {
                     replaceClass(`item-${itemId}`, `item-hidden-${1-value}`, `item-hidden-${value}`);
                 }
             );
         }
         function followFeed(feed_id, value, csrf_token) {
             doPost("{{ url_for('ajax.follow') }}", `feed_id=${feed_id}&value=${value}`, csrf_token,
-                function() {
+                function(_) {
                     replaceClass(`feed-${feed_id}`, `feed-followed-${1-value}`, `feed-followed-${value}`);
                 }
             );
         }
         function followPodcast(podcastindex_id, url, homepage_url, title, csrf_token) {
             doPost("{{ url_for('ajax.follow_podcast') }}", `url=${url}&homepage_url=${homepage_url}&title=${title}`, csrf_token,
-                function() {
+                function(_) {
                     replaceClass(`podcast-${podcastindex_id}`, `feed-followed-0`, `feed-followed-1`);
                 }
             );
         }
         function unfollowPodcast(podcastindex_id, url, csrf_token) {
             doPost("{{ url_for('ajax.unfollow_podcast') }}", `url=${url}`, csrf_token,
-                function() {
+                function(_) {
                     replaceClass(`podcast-${podcastindex_id}`, `feed-followed-1`, `feed-followed-0`);
                 }
             );
@@ -145,7 +150,13 @@
                 return;
             }
 
-            playPodcastItem(itemId);
+            var item = document.getElementById('item-' + itemId);
+            if (item.classList.contains('podcast')) {
+                playPodcastItem(itemId);
+            }
+        }
+        function feedClick(e, feedId, baseUrl) {
+            window.location = baseUrl + (feedId ? `?feed_id=${feedId}` : "");
         }
         </script>
     </head>
