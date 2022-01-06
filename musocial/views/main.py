@@ -8,18 +8,6 @@ import config
 
 main_blueprint = Blueprint('main', __name__)
 
-@main_blueprint.route('/sitemap.xml', methods=['GET'])
-def sitemap_xml():
-    return Response("""<?xml version="1.0" encoding="UTF-8"?>
-        <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-        </urlset>""", mimetype='application/xml')
-
-@main_blueprint.route('/robots.txt', methods=['GET'])
-def robots_txt():
-    return Response("""User-agent: *
-Disallow: /
-""", mimetype='text/plain')
-
 @main_blueprint.route('/', methods=['GET'])
 def index():
     try:

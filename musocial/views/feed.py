@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from babel.dates import format_timedelta
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_jwt_extended import current_user
 import requests
 from sqlalchemy import func
@@ -17,7 +17,33 @@ import config
 
 feed_blueprint = Blueprint('feed', __name__)
 
-@feed_blueprint.route('/follow-website', methods=['GET', 'POST'])
+@feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
+@jwt_required
+def follow(feed_id):
+    if not bool(int(request.form['value'])): # unfollow
+        for fg in m.FeedGroup.query \
+            .join(m.Group) \
+            .filter(m.Group.user == current_user, m.FeedGroup.feed_id == feed_id):
+            db.session.delete(fg)
+        for ue in m.UserItem.query \
+            .join(m.Item) \
+            .filter(m.UserItem.user == current_user, m.UserItem.liked == False, m.Item.feed_id == feed_id):
+            db.session.delete(ue)
+    else:
+        group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.DEFAULT_GROUP).one_or_none()
+        if not group:
+            group = m.Group(user=current_user, name=m.Group.DEFAULT_GROUP)
+            db.session.add(group)
+            db.session.commit()
+        db.session.add(m.FeedGroup(group=group, feed_id=feed_id))
+        existing_item_ids = {ue.item_id for ue in m.UserItem.query.join(m.Item).filter(m.UserItem.user == current_user, m.Item.feed_id == feed_id)}
+        for item in m.Feed.query.filter_by(id=feed_id).first().items:
+            if item.id not in existing_item_ids:
+                db.session.add(m.UserItem(user=current_user, item=item))
+    db.session.commit()
+    return jsonify(ok=True)
+
+@feed_blueprint.route('/feeds/websites/add', methods=['GET', 'POST'])
 @jwt_required
 def follow_website():
     if request.method == 'GET':
@@ -68,7 +94,7 @@ def follow_website():
             user=current_user,
             form=form, jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
-@feed_blueprint.route('/podcast-search', methods=['GET', 'POST'])
+@feed_blueprint.route('/feeds/podcasts/search', methods=['GET', 'POST'])
 @jwt_required
 def podcast_search():
     if request.method == 'GET':
@@ -93,3 +119,50 @@ def podcast_search():
         user=current_user,
         podcastindex_feeds=feeds,
         form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
+
+@feed_blueprint.route('/feeds/podcasts/follow', methods=['POST'])
+@jwt_required
+def follow_podcast():
+    feed = m.Feed.query.filter_by(url=request.form['url']).one_or_none()
+    if not feed:
+        feed = m.Feed(
+            url=request.form['url'],
+            homepage_url=request.form['homepage_url'],
+            title=request.form['title'])
+        db.session.add(feed)
+        db.session.commit()
+    parsed_feed = parse_feed(feed.url)
+    if not parsed_feed:
+        return jsonify(ok=False)
+    feed.update(parsed_feed)
+    db.session.add(feed)
+    db.session.commit()
+    new_items, updated_items = feed.update_items(parsed_feed)
+    db.session.add(feed)
+    for item in new_items + updated_items:
+        db.session.add(item)
+    db.session.commit()
+    group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.PODCASTS_GROUP).one_or_none()
+    if not group:
+        group = m.Group(user=current_user, name=m.Group.PODCASTS_GROUP)
+        db.session.add(group)
+        db.session.commit()
+    db.session.add(m.FeedGroup(group=group, feed_id=feed.id))
+    db.session.commit()
+    existing_item_ids = {ue.item_id for ue in m.UserItem.query.join(m.Item).filter(m.UserItem.user == current_user, m.Item.feed_id == feed.id)}
+    for item in feed.items:
+        if item.id not in existing_item_ids:
+            db.session.add(m.UserItem(user=current_user, item=item))
+    db.session.commit()
+    return jsonify(ok=True)
+
+@feed_blueprint.route('/feeds/podcasts/unfollow', methods=['POST'])
+@jwt_required
+def unfollow_podcast():
+    feed = m.Feed.query.filter_by(url=request.form['url']).one_or_none()
+    if feed:
+        for fg in m.FeedGroup.query.join(m.Group).filter(m.Group.user == current_user, models.FeedGroup.feed == feed):
+            db.session.delete(fg)
+        db.session.commit()
+        # TODO: delete items!
+    return jsonify(ok=True)

@@ -30,16 +30,14 @@ class MyFlask(Flask):
 
     def __call__(self, environ, start_response):
         if not self.initialized:
-            from musocial.views.ajax import ajax_blueprint
-            app.register_blueprint(ajax_blueprint)
             from musocial.views.api import api_blueprint
             app.register_blueprint(api_blueprint)
+            from musocial.views.feed import feed_blueprint
+            app.register_blueprint(feed_blueprint)
             from musocial.views.item import item_blueprint
             app.register_blueprint(item_blueprint)
             from musocial.views.main import main_blueprint
             app.register_blueprint(main_blueprint)
-            from musocial.views.feed import feed_blueprint
-            app.register_blueprint(feed_blueprint)
             from musocial.views.user import user_blueprint
             app.register_blueprint(user_blueprint)
             self.initialized = True

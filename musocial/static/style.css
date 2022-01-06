@@ -1,0 +1,22 @@
+.item-liked-1.item-hidden-0 { background-color: #D3DFC1; }
+.item-hidden-1 { background-color: #DAB2BA; }
+#navbar { background-color: #C4E38A; }
+.error { background-color: #DAB2BA; }
+.item-liked-1 .like-link { display: none; }
+.item-liked-0 .like-link { display: inline; }
+.item-liked-1 .unlike-link { display: inline; }
+.item-liked-0 .unlike-link { display: none; }
+.item-hidden-1 .hide-link { display: none; }
+.item-hidden-0 .hide-link { display: inline; }
+.item-hidden-1 .unhide-link { display: inline; }
+.item-hidden-0 .unhide-link { display: none; }
+.feed-followed-1 .follow-link { display: none; }
+.feed-followed-0 .follow-link { display: inline; }
+.feed-followed-1 .unfollow-link { display: inline; }
+.feed-followed-0 .unfollow-link { display: none; }
+.main-row { color: black; }
+.extra-row { color: gray; }
+.left-panel, .right-panel { vertical-align: top; }
+.left-panel { width: 40%; } .right-panel { width: 60%; }
+.item-row:hover, .item-active { background-color: #EBECCD; }
+.feed-row:hover, .feed-active { background-color: #EBECCD; }

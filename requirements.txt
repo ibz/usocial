@@ -9,5 +9,6 @@ Flask-Migrate
 Flask-WTF
 pytest
 python-dateutil
+python-podcastindex
 requests
 wheel
