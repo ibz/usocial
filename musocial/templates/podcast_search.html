@@ -18,10 +18,10 @@
             <td id="podcast-{{ feed.id }}" class="feed-followed-{% if feed.subscribed %}1{% else %}0{% endif %}">
                 {{ feed.title }} (<a target="_blank" href="{{ feed.homepage_url }}">{{ feed.domain }}</a>)
                 <span class="unfollow-link">
-                    (<a onclick="unfollowPodcast({{ feed.id }}, '{{ feed.url }}', '{{ csrf_token() }}'); return false;" href="#">unfollow</a>)
+                    <span onclick="unfollowPodcast({{ feed.id }}, '{{ feed.url }}', '{{ csrf_token() }}'); return false;" href="#"><i class="far fa-eye"></i></span>
                 </span>
                 <span class="follow-link">
-                    (<a onclick="followPodcast({{ feed.id }}, '{{ feed.url }}', '{{ feed.homepage_url }}', '{{ feed.title }}', '{{ csrf_token() }}'); return false;" href="#">follow</a>)
+                    <span onclick="followPodcast({{ feed.id }}, '{{ feed.url }}', '{{ feed.homepage_url }}', '{{ feed.title }}', '{{ csrf_token() }}'); return false;" href="#"><i class="far fa-eye-slash"></i></span>
                 </span>
                 <div class="extra-row">
                     {% for cat in feed.categories %}{{ cat }} {% endfor %}

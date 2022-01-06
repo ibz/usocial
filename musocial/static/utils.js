@@ -73,8 +73,8 @@ function followFeed(feedId, value, csrf_token) {
 }
 
 function followPodcast(podcastindex_id, url, homepage_url, title, csrf_token) {
-    var followLink = document.querySelector(`#podcast-${podcastindex_id} .follow-link a`);
-    var oldText = followLink.textContent;
+    var followLink = document.querySelector(`#podcast-${podcastindex_id} .follow-link span`);
+    var oldContent = followLink.innerHTML;
     var oldCB = followLink.onclick;
     followLink.textContent = "...";
     followLink.onclick = function() { return false; };
@@ -82,14 +82,14 @@ function followPodcast(podcastindex_id, url, homepage_url, title, csrf_token) {
         function(_) {
             replaceClass(`podcast-${podcastindex_id}`, `feed-followed-0`, `feed-followed-1`);
             followLink.onclick = oldCB;
-            followLink.textContent = oldText;
+            followLink.innerHTML = oldContent;
         }
     );
 }
 
 function unfollowPodcast(podcastindex_id, url, csrf_token) {
-    var unfollowLink = document.querySelector(`#podcast-${podcastindex_id} .unfollow-link a`);
-    var oldText = unfollowLink.textContent;
+    var unfollowLink = document.querySelector(`#podcast-${podcastindex_id} .unfollow-link span`);
+    var oldContent = unfollowLink.innerHTML;
     var oldCB = unfollowLink.onclick;
     unfollowLink.textContent = "...";
     unfollowLink.onclick = function() { return false; };
@@ -97,7 +97,7 @@ function unfollowPodcast(podcastindex_id, url, csrf_token) {
         function(_) {
             replaceClass(`podcast-${podcastindex_id}`, `feed-followed-1`, `feed-followed-0`);
             unfollowLink.onclick = oldCB;
-            unfollowLink.textContent = oldText;
+            unfollowLink.innerHTML = oldContent;
         }
     );
 }

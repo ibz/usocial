@@ -23,10 +23,10 @@ my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{
                 class="feed-followed-1 {% if feed.active %}feed-active {% endif %}"
                 onclick="feedClick(event, {{ feed.id }}, '{{ base_url }}'); return false;">
                 <span class="unfollow-link">
-                    (<a onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href="">unfollow</a>)
+                    <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye"></i></span>
                 </span>
                 <span class="follow-link">
-                    (<a onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href="">follow</a>)
+                    <span onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye-slash"></i></span>
                 </span>
                 {{ feed.title }}
             </td>
@@ -54,21 +54,21 @@ my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{
                 class="item {% if item.enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
                 onclick="itemClick(event, '{{ item.id }}'); return false;">
                 <span class="unlike-link">
-                    (<a onclick="likeItem({{ item.id }}, 0); return false;" href="">unlike</a>)
+                    <span onclick="likeItem({{ item.id }}, 0); return false;" href=""><i class="fas fa-heart" style="font-weight: solid;"></i></span>
                 </span>
                 <span class="like-link">
-                    (<a onclick="likeItem({{ item.id }}, 1); return false;" href="">like</a>)
+                    <span onclick="likeItem({{ item.id }}, 1); return false;" href=""><i class="far fa-heart" style="font-weight: regular;"></i></span>
                 </span>
                 {% if not liked %}
                 <span class="unhide-link">
-                    (<a onclick="hideItem({{ item.id }}, 0); return false;" href="">unhide</a>)
+                    <span onclick="hideItem({{ item.id }}, 0); return false;" href=""><i class="fas fa-trash-alt"></i></span>
                 </span>
                 <span class="hide-link">
-                    (<a onclick="hideItem({{ item.id }}, 1); return false;" href="">hide</a>)
+                    <span onclick="hideItem({{ item.id }}, 1); return false;" href=""><i class="far fa-trash-alt"></i></span>
                 </span>
                 {% endif %}
                 <span class="open-link">
-                    (<a href="" onclick="window.open('{{ item.url }}', '_blank'); return false;">open</a>)
+                    <span href="" onclick="window.open('{{ item.url }}', '_blank'); return false;"><i class="fas fa-external-link-square-alt"></i></span>
                 </span>
                 {{ item.title }}
         </td>
