@@ -2,10 +2,7 @@
 {% block content %}
 
 {% if not liked %}
-my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{{ url_for('feed.podcast_search') }}">+ podcast</a>
-{% set base_url = url_for('item.index') %}
-{% else %}
-{% set base_url = url_for('item.liked') %}
+  my feeds <a href="{{ url_for('feed.add_website') }}">+ website</a> <a href="{{ url_for('feed.search_podcasts') }}">+ podcast</a>
 {% endif %}
 <hr />
 <table>
@@ -13,7 +10,7 @@ my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{
 <table>
     <tr class="main-row feed-row">
         <td id="feed-"
-            onclick="feedClick(event, null, '{{ base_url }}'); return false;">
+            onclick="feedClick(event, null, {% if liked %}true{% else %}false{% endif %}); return false;">
             (all)
         </td>
     </tr>
@@ -21,7 +18,7 @@ my feeds <a href="{{ url_for('feed.follow_website') }}">+ website</a> <a href="{
         <tr class="main-row feed-row">
             <td id="feed-{{ feed.id }}"
                 class="feed-followed-1 {% if feed.active %}feed-active {% endif %}"
-                onclick="feedClick(event, {{ feed.id }}, '{{ base_url }}'); return false;">
+                onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;">
                 <span class="unfollow-link">
                     <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye"></i></span>
                 </span>

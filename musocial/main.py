@@ -71,7 +71,7 @@ def no_jwt():
 @jwt.expired_token_loader
 def jwt_token_expired(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
-    response = redirect(url_for('item.index'))
+    response = redirect(url_for('feed.items'))
     set_access_cookies(response, create_access_token(identity=identity))
     return response
 

@@ -17,8 +17,8 @@
                     <tr>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('item.index') }}">feeds</a> |
-                            <a href="{{ url_for('item.liked') }}">liked</a>
+                            <a href="{{ url_for('feed.items') }}">feeds</a> |
+                            <a href="{{ url_for('feed.liked_items') }}">liked</a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">

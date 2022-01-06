@@ -17,6 +17,43 @@ import config
 
 feed_blueprint = Blueprint('feed', __name__)
 
+def get_items_feeds(feed_id, q):
+    items = m.UserItem.query \
+            .join(m.Item) \
+            .filter(m.UserItem.user == current_user) \
+            .filter(q)
+    if feed_id:
+        items = items.filter(m.Item.feed_id == feed_id)
+    items = [ui for ui in items]
+    feeds = []
+    for feed in m.Feed.query \
+        .join(m.FeedGroup).join(m.Group) \
+        .filter(m.Group.user == current_user).all():
+        feeds.append({
+            'id': feed.id,
+            'title': feed.title,
+            'url': feed.url,
+            'subscribed': 1,
+            'active': feed_id == feed.id,
+        })
+    return items, feeds
+
+@feed_blueprint.route('/feeds/all/items', methods=['GET'])
+@feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'])
+@jwt_required
+def items(feed_id=None):
+    items, feeds = get_items_feeds(feed_id, m.UserItem.read == False)
+    show_player = items and all(i.item.enclosure_url for i in items)
+    return render_template('items.html', feeds=feeds, items=items, show_player=show_player, user=current_user)
+
+@feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
+@feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'])
+@jwt_required
+def liked_items(feed_id=None):
+    items, feeds = get_items_feeds(feed_id, m.UserItem.liked == True)
+    show_player = items and all(i.item.enclosure_url for i in items)
+    return render_template('items.html', feeds=feeds, items=items, liked=True, show_player=show_player, user=current_user)
+
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
 @jwt_required
 def follow(feed_id):
@@ -45,9 +82,9 @@ def follow(feed_id):
 
 @feed_blueprint.route('/feeds/websites/add', methods=['GET', 'POST'])
 @jwt_required
-def follow_website():
+def add_website():
     if request.method == 'GET':
-        return render_template('follow_website.html', user=current_user,
+        return render_template('add_website.html', user=current_user,
             form=forms.FollowWebsiteForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
     url = request.form['url']
@@ -63,7 +100,7 @@ def follow_website():
         parsed_feed = parse_feed(feed_url)
         if not parsed_feed:
             flash(f"Cannot parse feed at: {feed_url}")
-            return redirect(url_for('feed.follow_website'))
+            return redirect(url_for('feed.add_website'))
         existing_feed = m.Feed.query.filter_by(url=feed_url).one_or_none()
         feed = existing_feed or m.Feed(url=feed_url)
         feed.update(parsed_feed)
@@ -86,19 +123,19 @@ def follow_website():
             if item.id not in existing_item_ids:
                 db.session.add(m.UserItem(user=current_user, item=item))
         db.session.commit()
-        return redirect(url_for('item.index'))
+        return redirect(url_for('feed.items'))
     else:
         form = forms.FollowFeedForm()
         form.url.choices = alt_links
-        return render_template('follow_website.html',
+        return render_template('add_website.html',
             user=current_user,
             form=form, jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
 @feed_blueprint.route('/feeds/podcasts/search', methods=['GET', 'POST'])
 @jwt_required
-def podcast_search():
+def search_podcasts():
     if request.method == 'GET':
-        return render_template('podcast_search.html', user=current_user,
+        return render_template('search_podcasts.html', user=current_user,
             form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
     q = m.Feed.query.join(m.FeedGroup).join(m.Group).filter(m.Group.user == current_user, m.Group.name == m.Group.PODCASTS_GROUP).all()
@@ -115,7 +152,7 @@ def podcast_search():
               'categories': [c for c in (f['categories'] or {}).values()],
               'subscribed': f['url'] in subscribed_urls}
              for f in result['feeds']]
-    return render_template('podcast_search.html',
+    return render_template('search_podcasts.html',
         user=current_user,
         podcastindex_feeds=feeds,
         form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))

@@ -11,7 +11,7 @@ user_blueprint = Blueprint('user', __name__)
 @user_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user:
-        return redirect(url_for('item.index'))
+        return redirect(url_for('feed.items'))
 
     if request.method == 'GET':
         return render_template('user/register.html', form=forms.RegisterForm())
@@ -39,7 +39,7 @@ def register():
 @user_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user:
-        return redirect(url_for('item.index'))
+        return redirect(url_for('feed.items'))
 
     if request.method == 'GET':
         return render_template('user/login.html', form=forms.LoginForm())
@@ -59,7 +59,7 @@ def login():
             login_success = True
 
     if login_success:
-        response = redirect(url_for('item.index'))
+        response = redirect(url_for('feed.items'))
         set_access_cookies(response, create_access_token(identity=user.username))
         set_refresh_cookies(response, create_refresh_token(identity=user.username))
         return response
@@ -91,6 +91,6 @@ def password():
 
 @user_blueprint.route('/logout', methods=['GET'])
 def logout():
-    response = redirect(url_for('item.index'))
+    response = redirect(url_for('feed.items'))
     unset_jwt_cookies(response)
     return response

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <div>
-    <form action="{{ url_for('feed.follow_website') }}" method="POST">
+    <form action="{{ url_for('feed.add_website') }}" method="POST">
         <input id="jwt_csrf_token" name="jwt_csrf_token" type="hidden" value="{{ jwt_csrf_token }}" />
         {{ form.hidden_tag() }}
         {{ form.url.label }}

@@ -150,10 +150,10 @@ function itemClick(e, itemId) {
     }
 }
 
-function feedClick(e, feedId, baseUrl) {
+function feedClick(e, feedId, liked) {
     if (hasParentWithClass(e.target, ['follow-link', 'unfollow-link'])) {
         return;
     }
 
-    window.location = baseUrl + (feedId ? `?feed_id=${feedId}` : "");
+    window.location = `/feeds/${feedId ? feedId : "all"}/items` + (liked ? '/liked' : '');
 }
