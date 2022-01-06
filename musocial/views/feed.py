@@ -161,7 +161,7 @@ def follow_podcast():
 def unfollow_podcast():
     feed = m.Feed.query.filter_by(url=request.form['url']).one_or_none()
     if feed:
-        for fg in m.FeedGroup.query.join(m.Group).filter(m.Group.user == current_user, models.FeedGroup.feed == feed):
+        for fg in m.FeedGroup.query.join(m.Group).filter(m.Group.user == current_user, m.FeedGroup.feed == feed):
             db.session.delete(fg)
         db.session.commit()
         # TODO: delete items!
