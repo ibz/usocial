@@ -4,6 +4,9 @@
 {% if not liked %}
   my feeds <a href="{{ url_for('feed.add_website') }}">+ website</a> <a href="{{ url_for('feed.search_podcasts') }}">+ podcast</a>
 {% endif %}
+
+{% set feed_value_spec = feed.value_spec %}
+
 <hr />
 <table>
 <tr><td class="left-panel">
@@ -32,12 +35,22 @@
     {% endfor %}
 </table>
 </td><td class="right-panel">
+
 {% if show_player %}
 <audio id="podcastPlayer" controls>
     <source id="audioSource" src="" type=""></source>
     Your browser does not support the audio tag.
-</audio> 
+</audio>
 {% endif %}
+
+{% if feed %}
+<table class="feed-details">
+    {% if feed_value_spec and feed_value_spec.is_supported %}
+    <tr><td>Suggested contribution:</td><td>{{ feed_value_spec.sats_amount }} sats / minute @{{ feed_value_spec.protocol }}</td></tr>
+    {% endif %}
+</table>
+{% endif %}
+
 <table>
     {% for item in items %}
         {% set user_item = item %}
@@ -48,6 +61,7 @@
                 data-enclosure_url="{{ item.enclosure_url }}"
                 data-enclosure_type="{{ item.enclosure_type }}"
                 data-csrf_token="{{ csrf_token() }}"
+                {% if feed_value_spec %}data-has_value_spec="1"{% endif %}
                 class="item {% if item.enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
                 onclick="itemClick(event, '{{ item.id }}'); return false;">
                 <span class="unlike-link">

@@ -71,6 +71,12 @@ class Feed(db.Model):
     def domain_name(self):
         return urlparse(self.homepage_url).netloc
 
+    @property
+    def value_spec(self):
+        # get value_spec for the feed (item_id is None)
+        value_specs = [s for s in self.value_specs if s.item_id is None]
+        return value_specs[0] if value_specs else None
+
     def update(self, parsed_feed):
         self.fetched_at = datetime.now()
         if not parsed_feed:
@@ -92,9 +98,7 @@ class Feed(db.Model):
         self.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'])
 
     def update_value_spec(self, p_value_spec, p_value_recipients):
-        # get value_spec for the feed (item_id is None)
-        value_spec = [s for s in self.value_specs if s.item_id is None]
-        value_spec = value_spec[0] if value_spec else None
+        value_spec = self.value_spec
 
         if not p_value_spec:
             if value_spec:
@@ -197,9 +201,15 @@ class UserItem(db.Model):
     item = db.relationship(Item)
     liked = db.Column(db.Boolean, nullable=False, default=False)
     read = db.Column(db.Boolean, nullable=False, default=False)
+    played_value_count = db.Column(db.Integer, nullable=False, default=0)
+    paid_value_count = db.Column(db.Integer, nullable=False, default=0)
 
 class ValueSpec(db.Model):
     __tablename__ = 'value_specs'
+
+    SUPPORTED_PROTOCOLS = [
+        ('lightning', 'keysend'),
+    ]
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     protocol = db.Column(db.String(20), nullable=False)
@@ -209,6 +219,14 @@ class ValueSpec(db.Model):
     item_id = db.Column(db.Integer, db.ForeignKey(Item.id), nullable=True)
 
     recipients = db.relationship('ValueRecipient', cascade="all,delete", backref='value_spec')
+
+    @property
+    def is_supported(self):
+        return (self.protocol, self.method) in ValueSpec.SUPPORTED_PROTOCOLS
+
+    @property
+    def sats_amount(self):
+        return int(round(self.suggested_amount * 1000 * 100000000, 2))
 
 class ValueRecipient(db.Model):
     __tablename__ = 'value_recipients'

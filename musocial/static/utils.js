@@ -1,3 +1,8 @@
+// NB: VALUE_HEARTBEAT_DELAY * VALUE_HEARTBEAT_COUNT should always be 60000 (1 minute)
+// see: https://github.com/Podcastindex-org/podcast-namespace/blob/main/value/value.md#payment-intervals
+VALUE_HEARTBEAT_DELAY = 1000;
+VALUE_HEARTBEAT_COUNT = 60;
+
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
@@ -64,6 +69,12 @@ function hideItem(itemId, value) {
     );
 }
 
+function playedItemValue(itemId, value) {
+    var item = document.getElementById('item-' + itemId);
+    doPost(`/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
+        function(_) { });
+}
+
 function followFeed(feedId, value, csrf_token) {
     doPost(`/feeds/${feedId}/follow`, `value=${value}`, csrf_token,
         function(_) {
@@ -102,6 +113,21 @@ function unfollowPodcast(podcastindex_id, url, csrf_token) {
     );
 }
 
+function valueHeartbeat(itemId) {
+    var player = document.getElementById('podcastPlayer');
+    if (player.duration > 0 && !player.paused) {
+        if (!player.valueHeartbeatCount) {
+            player.valueHeartbeatCount = 0;
+        }
+        player.valueHeartbeatCount += 1;
+        if (player.valueHeartbeatCount == VALUE_HEARTBEAT_COUNT) {
+            playedItemValue(itemId, 1);
+            player.valueHeartbeatCount = 0;
+        }
+        setTimeout(function() { valueHeartbeat(itemId) }, VALUE_HEARTBEAT_DELAY);
+    }
+}
+
 function playPodcastItem(itemId) {
     for (const activeItem of document.querySelectorAll('.item-active')) {
         activeItem.classList.remove('item-active');
@@ -115,6 +141,11 @@ function playPodcastItem(itemId) {
     source.type = item.dataset.enclosure_type;
 
     var player = document.getElementById('podcastPlayer');
+    player.onplay = function() {
+        if (item.dataset.has_value_spec) {
+            setTimeout(function() { valueHeartbeat(itemId) }, VALUE_HEARTBEAT_DELAY);
+        }
+    }
     player.onended = function() {
         var currItem = null;
         var nextItem = null;

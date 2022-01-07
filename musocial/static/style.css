@@ -20,3 +20,4 @@
 .left-panel { width: 40%; } .right-panel { width: 60%; }
 .item-row:hover, .item-active { background-color: #EBECCD; }
 .feed-row:hover, .feed-active { background-color: #EBECCD; }
+.feed-details { border: 1px solid; }
