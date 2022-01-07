@@ -167,7 +167,6 @@ def follow_podcast():
             homepage_url=request.form['homepage_url'],
             title=request.form['title'])
         db.session.add(feed)
-        db.session.commit()
     parsed_feed = parse_feed(feed.url)
     if not parsed_feed:
         return jsonify(ok=False)

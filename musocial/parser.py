@@ -14,7 +14,11 @@ import config
 
 from musocial.main import app
 
+PODCAST_NAMESPACE_URI = 'https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md'
 HEADERS = {'User-Agent': config.USER_AGENT}
+
+PARSER_FEEDPARSER = 1
+PARSER_ELEMENTTREE = 2
 
 def strip_protocol(url):
     return url.replace('http://', '').replace('https://', '')
@@ -50,7 +54,29 @@ def parse_feed_item(item):
             'enclosure': enclosure_links[0] if enclosure_links else None,
             'updated_at': parse_feed_datetime(item.get('updated_parsed'))}
 
+def parse_valuespec(root):
+    value_spec = None
+    value_recipients = []
+
+    value_el = root.find('channel/{%s}value' % PODCAST_NAMESPACE_URI)
+    if value_el:
+        value_spec = {}
+        value_spec['protocol'] = value_el.attrib['type']
+        value_spec['method'] = value_el.attrib['method']
+        value_spec['suggested_amount'] = float(value_el.attrib.get('suggested', 0))
+        for value_recipient_el in value_el.findall('{%s}valueRecipient' % PODCAST_NAMESPACE_URI):
+            value_recipient = {}
+            value_recipient['name'] = value_recipient_el.attrib.get('name')
+            value_recipient['address_type'] = value_recipient_el.attrib['type']
+            value_recipient['address'] = value_recipient_el.attrib['address']
+            value_recipient['split'] = int(value_recipient_el.attrib['split'])
+            value_recipients.append(value_recipient)
+
+    return value_spec, value_recipients
+
 def parse_feed(url):
+    app.logger.debug(f'Parsing feed {url}...')
+
     try:
         content = requests.get(url, headers=HEADERS, timeout=10).text
     except Exception as e:
@@ -60,18 +86,38 @@ def parse_feed(url):
         app.logger.warn("Content too short.")
         return
 
+    parsed_feed = None
+
     try:
         f = feedparser.parse(content)
+        app.logger.debug(f'Parsed feed {url} using PARSER_FEEDPARSER')
     except RuntimeError:
         f = None
 
     if f and f['feed'] and f['feed'].get('title') and f['feed'].get('link'):
+        value_spec = None
+        value_recipients = []
+        # HACK: feedparser doesn't yet parse the "podcast" namespace properly
+        # (see https://github.com/kurtmckee/feedparser/issues/301)
+        # so we should parse this part separately
+        if 'podcast' in f['namespaces']:
+            root = None
+            try:
+                root = fromstring(content)
+            except ParseError as e:
+                app.log_exception(e)
+            if root:
+                value_spec, value_recipients = parse_valuespec(root)
+                app.logger.debug(f'Parsed ValueSpec: {value_spec is not None} {len(value_recipients)}')
         return {'title': f['feed']['title'],
                 'updated_at': parse_feed_datetime(f['feed'].get('updated_parsed')),
-                'items': [parse_feed_item(e) for e in f['entries'] if e and e.get('link') and e.get('title')]}
+                'items': [parse_feed_item(e) for e in f['entries'] if e and e.get('link') and e.get('title')],
+                'value_spec': value_spec, 'value_recipients': value_recipients,
+                'parser': PARSER_FEEDPARSER}
 
     try:
         root = fromstring(content)
+        app.logger.debug(f'Parsed feed {url} using PARSER_ELEMENTTREE')
     except ParseError as e:
         app.log_exception(e)
         return
@@ -85,9 +131,14 @@ def parse_feed(url):
         app.logger.warn("No channel/link element found.")
         return
     date_el = root.find('channel/lastBuildDate')
+
+    value_spec, value_recipients = parse_valuespec(root)
+
     return {'title': title_el.text,
             'updated_at': parse_datetime(date_el.text) if date_el else None,
-            'items': [parse_rss_item(item) for item in root.findall('channel/item')]}
+            'items': [parse_rss_item(item) for item in root.findall('channel/item')],
+            'value_spec': value_spec, 'value_recipients': value_recipients,
+            'parser': PARSER_ELEMENTTREE}
 
 def extract_feed_links(url, content):
     parsed_url = urlparse(url)
