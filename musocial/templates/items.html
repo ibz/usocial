@@ -61,7 +61,7 @@
                 data-enclosure_url="{{ item.enclosure_url }}"
                 data-enclosure_type="{{ item.enclosure_type }}"
                 data-csrf_token="{{ csrf_token() }}"
-                {% if feed_value_spec %}data-has_value_spec="1"{% endif %}
+                {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
                 class="item {% if item.enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
                 onclick="itemClick(event, '{{ item.id }}'); return false;">
                 <span class="unlike-link">

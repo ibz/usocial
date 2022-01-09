@@ -64,7 +64,7 @@ class Feed(db.Model):
     fetch_failed = db.Column(db.Boolean, default=False)
     parser = db.Column(db.Integer, nullable=False)
 
-    items = db.relationship('Item')
+    items = db.relationship('Item', back_populates='feed')
     value_specs = db.relationship('ValueSpec')
 
     @property
@@ -176,6 +176,7 @@ class Item(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
+    feed = db.relationship(Feed, back_populates='items')
     url = db.Column(db.String(1000), unique=True, nullable=False)
     title = db.Column(db.String(1000))
     content_from_feed = db.Column(db.String(10000))
@@ -204,6 +205,11 @@ class UserItem(db.Model):
     played_value_count = db.Column(db.Integer, nullable=False, default=0)
     paid_value_count = db.Column(db.Integer, nullable=False, default=0)
 
+    @property
+    def value_spec(self):
+        # TODO: check item value specs first, which can override feed value specs
+        return self.item.feed.value_spec
+
 class ValueSpec(db.Model):
     __tablename__ = 'value_specs'
 
@@ -228,6 +234,11 @@ class ValueSpec(db.Model):
     def sats_amount(self):
         return int(round(self.suggested_amount * 1000 * 100000000, 2))
 
+    def split_sats(self, amount):
+        shares = {r.id: r.split for r in self.recipients}
+        total_shares = sum(shares.values())
+        return {r_id: amount * (r_shares / total_shares) for r_id, r_shares in shares.items()}
+
 class ValueRecipient(db.Model):
     __tablename__ = 'value_recipients'
 
@@ -237,3 +248,11 @@ class ValueRecipient(db.Model):
     address_type = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(100), nullable=False)
     split = db.Column(db.Integer, nullable=False)
+
+class ValuePayment(db.Model):
+    __tablename__ = 'value_payments'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey(ValueRecipient.id))
+    date = db.Column(db.DateTime, nullable=False, default=datetime.now())
+    amount = db.Column(db.Integer, nullable=False)

@@ -36,6 +36,8 @@ class MyFlask(Flask):
             app.register_blueprint(feed_blueprint)
             from musocial.views.item import item_blueprint
             app.register_blueprint(item_blueprint)
+            from musocial.views.karma import karma_blueprint
+            app.register_blueprint(karma_blueprint)
             from musocial.views.main import main_blueprint
             app.register_blueprint(main_blueprint)
             from musocial.views.user import user_blueprint
