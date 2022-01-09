@@ -58,24 +58,25 @@
         <tr class="main-row item-row">
             <td id="item-{{ item.id }}"
                 data-id="{{ item.id }}"
+                data-feed_id="{{ item.feed_id }}"
                 data-enclosure_url="{{ item.enclosure_url }}"
                 data-enclosure_type="{{ item.enclosure_type }}"
                 data-csrf_token="{{ csrf_token() }}"
                 {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
                 class="item {% if item.enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
-                onclick="itemClick(event, '{{ item.id }}'); return false;">
+                onclick="itemClick(event, {{ item.feed_id }}, {{ item.id }}); return false;">
                 <span class="unlike-link">
-                    <span onclick="likeItem({{ item.id }}, 0); return false;" href=""><i class="fas fa-heart" style="font-weight: solid;"></i></span>
+                    <span onclick="likeItem({{ item.feed_id }}, {{ item.id }}, 0); return false;" href=""><i class="fas fa-heart" style="font-weight: solid;"></i></span>
                 </span>
                 <span class="like-link">
-                    <span onclick="likeItem({{ item.id }}, 1); return false;" href=""><i class="far fa-heart" style="font-weight: regular;"></i></span>
+                    <span onclick="likeItem({{ item.feed_id }}, {{ item.id }}, 1); return false;" href=""><i class="far fa-heart" style="font-weight: regular;"></i></span>
                 </span>
                 {% if not liked %}
                 <span class="unhide-link">
-                    <span onclick="hideItem({{ item.id }}, 0); return false;" href=""><i class="fas fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ item.feed_id }}, {{ item.id }}, 0); return false;" href=""><i class="fas fa-trash-alt"></i></span>
                 </span>
                 <span class="hide-link">
-                    <span onclick="hideItem({{ item.id }}, 1); return false;" href=""><i class="far fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ item.feed_id }}, {{ item.id }}, 1); return false;" href=""><i class="far fa-trash-alt"></i></span>
                 </span>
                 {% endif %}
                 <span class="open-link">

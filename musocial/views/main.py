@@ -20,5 +20,5 @@ def index():
             set_refresh_cookies(response, create_refresh_token(identity=default_user.username))
             return response
         else:
-            return redirect(url_for('user.login'))
+            return redirect(url_for('account.login'))
     return redirect(url_for('feed.items'))

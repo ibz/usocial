@@ -51,27 +51,27 @@ function doPost(url, data, csrf_token, successCB) {
     return false;
 }
 
-function likeItem(itemId, value) {
+function likeItem(feedId, itemId, value) {
     var item = document.getElementById('item-' + itemId);
-    doPost(`/items/${itemId}/like`, `value=${value}`, item.dataset.csrf_token,
+    doPost(`/feeds/${feedId}/items/${itemId}/like`, `value=${value}`, item.dataset.csrf_token,
         function(_) {
             replaceClass(`item-${itemId}`, `item-liked-${1-value}`, `item-liked-${value}`);
         }
     );
 }
 
-function hideItem(itemId, value) {
+function hideItem(feedId, itemId, value) {
     var item = document.getElementById('item-' + itemId);
-    doPost(`/items/${itemId}/hide`, `value=${value}`, item.dataset.csrf_token,
+    doPost(`/feeds/${feedId}/items/${itemId}/hide`, `value=${value}`, item.dataset.csrf_token,
         function(_) {
             replaceClass(`item-${itemId}`, `item-hidden-${1-value}`, `item-hidden-${value}`);
         }
     );
 }
 
-function playedItemValue(itemId, value) {
+function playedItemValue(feedId, itemId, value) {
     var item = document.getElementById('item-' + itemId);
-    doPost(`/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
+    doPost(`/feeds/${feedId}/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
         function(_) { });
 }
 
@@ -113,7 +113,7 @@ function unfollowPodcast(podcastindex_id, url, csrf_token) {
     );
 }
 
-function valueHeartbeat(itemId) {
+function valueHeartbeat(feedId, itemId) {
     var player = document.getElementById('podcastPlayer');
     if (player.duration > 0 && !player.paused) {
         if (!player.valueHeartbeatCount) {
@@ -121,14 +121,14 @@ function valueHeartbeat(itemId) {
         }
         player.valueHeartbeatCount += 1;
         if (player.valueHeartbeatCount == VALUE_HEARTBEAT_COUNT) {
-            playedItemValue(itemId, 1);
+            playedItemValue(feedId, itemId, 1);
             player.valueHeartbeatCount = 0;
         }
-        setTimeout(function() { valueHeartbeat(itemId) }, VALUE_HEARTBEAT_DELAY);
+        setTimeout(function() { valueHeartbeat(feedId, itemId) }, VALUE_HEARTBEAT_DELAY);
     }
 }
 
-function playPodcastItem(itemId) {
+function playPodcastItem(feedId, itemId) {
     for (const activeItem of document.querySelectorAll('.item-active')) {
         activeItem.classList.remove('item-active');
     }
@@ -143,15 +143,15 @@ function playPodcastItem(itemId) {
     var player = document.getElementById('podcastPlayer');
     player.onplay = function() {
         if (item.dataset.has_value_spec) {
-            setTimeout(function() { valueHeartbeat(itemId) }, VALUE_HEARTBEAT_DELAY);
+            setTimeout(function() { valueHeartbeat(feedId, itemId) }, VALUE_HEARTBEAT_DELAY);
         }
     }
     player.onended = function() {
         var currItem = null;
         var nextItem = null;
         for (const i of document.querySelectorAll('.item')) {
-            if (i.dataset.id === itemId) {
-                hideItem(itemId, 1, i.dataset.csrf_token);
+            if (parseInt(i.dataset.id) === itemId) {
+                hideItem(feedId, itemId, 1, i.dataset.csrf_token);
                 currItem = i;
                 continue;
             }
@@ -161,7 +161,7 @@ function playPodcastItem(itemId) {
             }
         }
         if (nextItem) {
-            playPodcastItem(nextItem.dataset.id);
+            playPodcastItem(nextItem.dataset.feed_id, nextItem.dataset.id);
         } else {
             currItem.classList.remove('item-active');
         }
@@ -170,14 +170,14 @@ function playPodcastItem(itemId) {
     player.play();
 }
 
-function itemClick(e, itemId) {
+function itemClick(e, feedId, itemId) {
     if (hasParentWithClass(e.target, ['like-link', 'unlike-link', 'hide-link', 'unhide-link', 'open-link'])) {
         return;
     }
 
     var item = document.getElementById('item-' + itemId);
     if (item.classList.contains('podcast')) {
-        playPodcastItem(itemId);
+        playPodcastItem(feedId, itemId);
     }
 }
 

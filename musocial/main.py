@@ -30,18 +30,14 @@ class MyFlask(Flask):
 
     def __call__(self, environ, start_response):
         if not self.initialized:
+            from musocial.views.account import account_blueprint
+            app.register_blueprint(account_blueprint)
             from musocial.views.api import api_blueprint
             app.register_blueprint(api_blueprint)
             from musocial.views.feed import feed_blueprint
             app.register_blueprint(feed_blueprint)
-            from musocial.views.item import item_blueprint
-            app.register_blueprint(item_blueprint)
-            from musocial.views.karma import karma_blueprint
-            app.register_blueprint(karma_blueprint)
             from musocial.views.main import main_blueprint
             app.register_blueprint(main_blueprint)
-            from musocial.views.user import user_blueprint
-            app.register_blueprint(user_blueprint)
             self.initialized = True
         return super().__call__(environ, start_response)
 
@@ -68,7 +64,7 @@ def create_db():
 
 @jwt.token_verification_failed_loader
 def no_jwt():
-    return redirect(url_for('user.login'))
+    return redirect(url_for('account.login'))
 
 @jwt.expired_token_loader
 def jwt_token_expired(_jwt_header, jwt_data):

@@ -2,15 +2,15 @@ from flask_wtf import FlaskForm
 from wtforms import BooleanField, FieldList, FormField, HiddenField, IntegerField, PasswordField, SelectField, StringField
 
 class RegisterForm(FlaskForm):
-    username = StringField("Your username")
+    username = StringField("Username")
 
 class LoginForm(FlaskForm):
-    username = StringField("Your username")
-    password = PasswordField("Your password")
+    username = StringField("Username")
+    password = PasswordField("Password")
 
 class NewPasswordForm(FlaskForm):
-    new_password = PasswordField("Your new password")
-    repeat_new_password = PasswordField("Repeat your new password")
+    new_password = PasswordField("Password")
+    repeat_new_password = PasswordField("Repeat password")
 
 class FollowWebsiteForm(FlaskForm):
     url = StringField("http://")

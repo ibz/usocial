@@ -179,7 +179,7 @@ class Item(db.Model):
     feed = db.relationship(Feed, back_populates='items')
     url = db.Column(db.String(1000), unique=True, nullable=False)
     title = db.Column(db.String(1000))
-    content_from_feed = db.Column(db.String(10000))
+    content_from_feed = db.deferred(db.Column(db.String(10000)))
     enclosure_url = db.Column(db.String(1000))
     enclosure_type = db.Column(db.String(100))
     enclosure_length = db.Column(db.Integer)
