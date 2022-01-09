@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, curren
 from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
-from musocial import forms, models
+from musocial import forms, models as m
 from musocial.main import app, db, jwt_required
 
 user_blueprint = Blueprint('user', __name__)
@@ -20,11 +20,11 @@ def register():
     username = request.form['username']
     if not username:
         error = "Username is required"
-    elif models.User.query.filter_by(username=username).first():
+    elif m.User.query.filter_by(username=username).first():
         error = "Username is already in use"
     if error is None:
         try:
-            db.session.add(models.User(username))
+            db.session.add(m.User(username))
             db.session.commit()
         except Exception as e:
             app.log_exception(e)
@@ -46,7 +46,7 @@ def login():
 
     username = request.form['username']
     password = request.form['password']
-    user = models.User.query.filter_by(username=username).first()
+    user = m.User.query.filter_by(username=username).first()
     login_success = False
     if not user:
         app.logger.info("User not found: %s", username)
@@ -70,7 +70,11 @@ def login():
 @user_blueprint.route('/me', methods=['GET'])
 @jwt_required
 def me():
-    return render_template('user/me.html', user=current_user)
+    q = db.session.query(m.UserItem).filter_by(user_id=current_user.id)
+    sum_q = q.statement.with_only_columns([db.func.sum(m.UserItem.played_value_count), db.func.sum(m.UserItem.paid_value_count)])
+    played_value, paid_value = q.session.execute(sum_q).one()
+
+    return render_template('user/me.html', user=current_user, played_value=played_value, paid_value=paid_value)
 
 @user_blueprint.route('/password', methods=['GET', 'POST'])
 @jwt_required

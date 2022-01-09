@@ -2,13 +2,13 @@
 {% block content %}
 
 {% if not liked %}
-  my feeds <a href="{{ url_for('feed.add_website') }}">+ website</a> <a href="{{ url_for('feed.search_podcasts') }}">+ podcast</a>
+  my feeds <a href="{{ url_for('feed.add_website') }}" title="add blog">+ <i class="fas fa-blog"></i></a> <a href="{{ url_for('feed.search_podcasts') }}" title="add podcast">+ <i class="fas fa-podcast"></i></a>
 {% endif %}
 
 {% set feed_value_spec = feed.value_spec %}
 
 <hr />
-<table>
+<table class="split-panels">
 <tr><td class="left-panel">
 <table>
     <tr class="main-row feed-row">
@@ -51,7 +51,7 @@
 </table>
 {% endif %}
 
-<table>
+<table class="items-table">
     {% for item in items %}
         {% set user_item = item %}
         {% set item = user_item.item %}

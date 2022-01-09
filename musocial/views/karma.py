@@ -8,14 +8,6 @@ from musocial.main import app, db, jwt_required
 
 karma_blueprint = Blueprint('karma', __name__)
 
-@karma_blueprint.route('/karma', methods=['GET'])
-@jwt_required
-def karma():
-    q = db.session.query(m.UserItem).filter_by(user_id=current_user.id)
-    sum_q = q.statement.with_only_columns([db.func.sum(m.UserItem.played_value_count), db.func.sum(m.UserItem.paid_value_count)])
-    played_value, paid_value = q.session.execute(sum_q).one()
-    return render_template('karma.html', user=current_user, played_value=played_value, paid_value=paid_value)
-
 @karma_blueprint.route('/karma/pay', methods=['GET', 'POST'])
 @jwt_required
 def pay():
@@ -52,4 +44,4 @@ def pay():
                 payment = m.ValuePayment(recipient_id=payment_data['recipient']['id'], amount=payment_data['amount'])
                 db.session.add(payment)
             db.session.commit()
-        return redirect(url_for('karma.karma'))
+        return redirect(url_for('user.me'))

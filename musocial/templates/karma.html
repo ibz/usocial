@@ -1,8 +1,0 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>Podcast value</h2>
-<table>
-<tr><td>Played</td><td>{{ played_value }}</td></tr>
-<tr><td>Paid</td><td>{{ paid_value }}</td><td>{% if paid_value < played_value %}<a href="{{ url_for('karma.pay') }}"><i class="fas fa-bolt"></i></a>{% endif %}</td></tr>
-</table>
-{% endblock %}

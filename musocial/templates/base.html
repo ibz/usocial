@@ -22,8 +22,7 @@
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
-                        <a href="{{ url_for('karma.karma') }}">karma</a> |
-                        <a href="{% if user %}{{ url_for('user.me') }}{% else %}{{ url_for('user.login') }}{% endif %}">me</a>
+                        <a href="{% if user %}{{ url_for('user.me') }}{% else %}{{ url_for('user.login') }}{% endif %}">{{ user.username }}</a>
                     </td>
                     </tr>
                 </table>
