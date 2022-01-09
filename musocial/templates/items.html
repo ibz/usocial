@@ -52,37 +52,35 @@
 {% endif %}
 
 <table class="items-table">
-    {% for item in items %}
-        {% set user_item = item %}
-        {% set item = user_item.item %}
+    {% for user_item, url, title, feed_id, enclosure_url, enclosure_type in items %}
         <tr class="main-row item-row">
-            <td id="item-{{ item.id }}"
-                data-id="{{ item.id }}"
-                data-feed_id="{{ item.feed_id }}"
-                data-enclosure_url="{{ item.enclosure_url }}"
-                data-enclosure_type="{{ item.enclosure_type }}"
+            <td id="item-{{ user_item.item_id }}"
+                data-id="{{ user_item.item_id }}"
+                data-feed_id="{{ feed_id }}"
+                data-enclosure_url="{{ enclosure_url }}"
+                data-enclosure_type="{{ enclosure_type }}"
                 data-csrf_token="{{ csrf_token() }}"
                 {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
-                class="item {% if item.enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
-                onclick="itemClick(event, {{ item.feed_id }}, {{ item.id }}); return false;">
+                class="item {% if enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
+                onclick="itemClick(event, {{ feed_id }}, {{ user_item.item_id }}); return false;">
                 <span class="unlike-link">
-                    <span onclick="likeItem({{ item.feed_id }}, {{ item.id }}, 0); return false;" href=""><i class="fas fa-heart" style="font-weight: solid;"></i></span>
+                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i class="fas fa-heart" style="font-weight: solid;"></i></span>
                 </span>
                 <span class="like-link">
-                    <span onclick="likeItem({{ item.feed_id }}, {{ item.id }}, 1); return false;" href=""><i class="far fa-heart" style="font-weight: regular;"></i></span>
+                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i class="far fa-heart" style="font-weight: regular;"></i></span>
                 </span>
                 {% if not liked %}
                 <span class="unhide-link">
-                    <span onclick="hideItem({{ item.feed_id }}, {{ item.id }}, 0); return false;" href=""><i class="fas fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i class="fas fa-trash-alt"></i></span>
                 </span>
                 <span class="hide-link">
-                    <span onclick="hideItem({{ item.feed_id }}, {{ item.id }}, 1); return false;" href=""><i class="far fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i class="far fa-trash-alt"></i></span>
                 </span>
                 {% endif %}
                 <span class="open-link">
-                    <span href="" onclick="window.open('{{ item.url }}', '_blank'); return false;"><i class="fas fa-external-link-square-alt"></i></span>
+                    <span href="" onclick="window.open('{{ url }}', '_blank'); return false;"><i class="fas fa-external-link-square-alt"></i></span>
                 </span>
-                {{ item.title }}
+                {{ title }}
         </td>
         </tr>
         <tr><td></td></tr>

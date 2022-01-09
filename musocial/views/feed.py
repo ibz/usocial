@@ -20,11 +20,12 @@ feed_blueprint = Blueprint('feed', __name__)
 def get_items_feeds(feed_id, q):
     items = m.UserItem.query \
             .join(m.Item) \
+            .add_columns(m.Item.url, m.Item.title, m.Item.feed_id, m.Item.enclosure_url, m.Item.enclosure_type) \
             .filter(m.UserItem.user == current_user) \
             .filter(q)
     if feed_id:
         items = items.filter(m.Item.feed_id == feed_id)
-    items = [ui for ui in items]
+    items = list(items) # TODO: optimize this by computing show_player differently
     feeds = []
     for feed in m.Feed.query \
         .join(m.FeedGroup).join(m.Group) \
@@ -44,7 +45,7 @@ def get_items_feeds(feed_id, q):
 def items(feed_id=None):
     items, feeds = get_items_feeds(feed_id, m.UserItem.read == False)
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
-    show_player = items and all(i.item.enclosure_url for i in items)
+    show_player = items and all(i[4] for i in items)
     return render_template('items.html', feeds=feeds, items=items, feed=feed, show_player=show_player, user=current_user)
 
 @feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
@@ -53,7 +54,7 @@ def items(feed_id=None):
 def liked_items(feed_id=None):
     items, feeds = get_items_feeds(feed_id, m.UserItem.liked == True)
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
-    show_player = items and all(i.item.enclosure_url for i in items)
+    show_player = items and all(i[4] for i in items)
     return render_template('items.html', feeds=feeds, items=items, liked=True, feed=feed, show_player=show_player, user=current_user)
 
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
