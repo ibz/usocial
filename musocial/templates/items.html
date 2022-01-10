@@ -10,28 +10,34 @@
 <hr />
 <table class="split-panels">
 <tr><td class="left-panel">
-<table>
+<table class="feeds-table">
     <tr class="main-row feed-row">
+        <td class="feed-actions"></td>
         <td id="feed-"
             onclick="feedClick(event, null, {% if liked %}true{% else %}false{% endif %}); return false;">
-            (all)
+            All
         </td>
+        <td>{{ counts['total'] }}</td>
     </tr>
     {% for feed in feeds %}
-        <tr class="main-row feed-row">
-            <td id="feed-{{ feed.id }}"
-                class="feed-followed-1 {% if feed.active %}feed-active {% endif %}"
-                onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;">
+    {% if counts[feed.id] %}
+        <tr class="main-row feed-row {% if feed.active %}feed-active {% endif %}"
+            onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;">
+            <td id="feed-{{ feed.id }}" class="feed-actions feed-followed-1">
                 <span class="unfollow-link">
                     <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye"></i></span>
                 </span>
                 <span class="follow-link">
                     <span onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye-slash"></i></span>
                 </span>
+            </td>
+            <td id="feed-{{ feed.id }}">
                 {{ feed.title }}
             </td>
+            <td>{{ counts[feed.id] }}</td>
         </tr>
         <tr><td></td></tr>
+    {% endif %}
     {% endfor %}
 </table>
 </td><td class="right-panel">

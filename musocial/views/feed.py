@@ -37,25 +37,31 @@ def get_items_feeds(feed_id, q):
             'subscribed': 1,
             'active': feed_id == feed.id,
         })
-    return items, feeds
+    counts = {f_id: c for f_id, c in db.session.query(m.Feed.id, db.func.count(m.UserItem.item_id)) \
+        .select_from(m.Feed).join(m.Item).join(m.UserItem) \
+        .filter(m.UserItem.user == current_user) \
+        .filter(q) \
+        .group_by(m.Feed.id).all()}
+    counts['total'] = sum(counts.values())
+    return items, feeds, counts
 
 @feed_blueprint.route('/feeds/all/items', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'])
 @jwt_required
 def items(feed_id=None):
-    items, feeds = get_items_feeds(feed_id, m.UserItem.read == False)
+    items, feeds, counts = get_items_feeds(feed_id, m.UserItem.read == False)
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
     show_player = items and all(i[4] for i in items)
-    return render_template('items.html', feeds=feeds, items=items, feed=feed, show_player=show_player, user=current_user)
+    return render_template('items.html', feeds=feeds, items=items, counts=counts, feed=feed, show_player=show_player, user=current_user)
 
 @feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'])
 @jwt_required
 def liked_items(feed_id=None):
-    items, feeds = get_items_feeds(feed_id, m.UserItem.liked == True)
+    items, feeds, counts = get_items_feeds(feed_id, m.UserItem.liked == True)
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
     show_player = items and all(i[4] for i in items)
-    return render_template('items.html', feeds=feeds, items=items, liked=True, feed=feed, show_player=show_player, user=current_user)
+    return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True, feed=feed, show_player=show_player, user=current_user)
 
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
 @jwt_required

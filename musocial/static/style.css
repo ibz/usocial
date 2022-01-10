@@ -22,6 +22,8 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; }
 .split-panels { width: 100%; }
 .left-panel, .right-panel { vertical-align: top; }
 .left-panel { width: 40%; } .right-panel { width: 60%; }
+.feeds-table { width: 100%; }
+.feed-actions { width: 5%; }
 .items-table { width: 100%; }
 .item-row:hover, .item-active { background-color: #EBECCD; }
 .feed-row:hover, .feed-active { background-color: #EBECCD; }
