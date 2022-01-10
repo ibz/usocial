@@ -256,3 +256,10 @@ class ValuePayment(db.Model):
     recipient_id = db.Column(db.Integer, db.ForeignKey(ValueRecipient.id))
     date = db.Column(db.DateTime, nullable=False, default=datetime.now())
     amount = db.Column(db.Integer, nullable=False)
+
+def create_all():
+    db.create_all()
+
+    # create the default user here
+    db.session.add(User(User.DEFAULT_USERNAME))
+    db.session.commit()

@@ -11,6 +11,7 @@ RUN ln -s /app /tmp/musocial
 RUN pip install --no-cache-dir -e /tmp/
 
 COPY config.py /app/
+COPY prestart.sh /app/
 
 ENV INSTANCE_PATH=/instance
 VOLUME ["/instance"]

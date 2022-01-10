@@ -56,11 +56,7 @@ jwt = JWTManager(app)
 @with_appcontext
 def create_db():
     from musocial import models
-    db.create_all()
-
-    # create the default user here
-    db.session.add(models.User(models.User.DEFAULT_USERNAME))
-    db.session.commit()
+    models.create_all()
 
 @jwt.token_verification_failed_loader
 def no_jwt():
