@@ -7,3 +7,5 @@ fi
 if [ ! -f /instance/musocial.db ]; then
     FLASK_APP=main flask create-db
 fi
+
+python ./main.py

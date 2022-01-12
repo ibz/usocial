@@ -1,17 +1,24 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.8
+FROM python:3.8-buster
 
-COPY requirements.txt /tmp/
-RUN pip install -U pip
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+COPY ./musocial /musocial
+COPY requirements.txt /
+COPY config.py /
+COPY start.sh /
+RUN chmod +x /start.sh
 
-COPY ./musocial /app
-COPY setup.py /tmp/
-RUN ln -s /app /tmp/musocial
+ENV PYTHONPATH "${PYTHONPATH}:/"
 
-RUN pip install --no-cache-dir -e /tmp/
-
-COPY config.py /app/
-COPY prestart.sh /app/
+RUN pip install --upgrade pip && pip install --no-cache-dir -r /requirements.txt
 
 ENV INSTANCE_PATH=/instance
 VOLUME ["/instance"]
+
+RUN groupadd -r musocial --gid=1000 && useradd -r -g musocial --uid=1000 --create-home --shell /bin/bash musocial
+
+USER musocial
+
+WORKDIR /musocial
+
+EXPOSE 5000
+
+CMD [ "/start.sh" ]

@@ -24,8 +24,11 @@ dictConfig({
 })
 
 class MyFlask(Flask):
-    def __init__(self, import_name, instance_path):
+    def __init__(self, import_name):
+        instance_path = os.environ.get('INSTANCE_PATH')
+
         super().__init__(import_name, instance_path=instance_path, instance_relative_config=True)
+
         self.initialized = False
 
     def __call__(self, environ, start_response):
@@ -41,7 +44,7 @@ class MyFlask(Flask):
             self.initialized = True
         return super().__call__(environ, start_response)
 
-app = MyFlask(__name__, instance_path=os.environ.get('INSTANCE_PATH'))
+app = MyFlask(__name__)
 app.config.from_object('config')
 app.config.from_pyfile('config.py')
 
@@ -89,3 +92,6 @@ def jwt_required_wrapper(refresh):
 
 jwt_required = jwt_required_wrapper(False)
 refresh_jwt_required = jwt_required_wrapper(True)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
