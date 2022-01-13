@@ -33,13 +33,13 @@ class MyFlask(Flask):
 
     def __call__(self, environ, start_response):
         if not self.initialized:
-            from musocial.views.account import account_blueprint
+            from usocial.views.account import account_blueprint
             app.register_blueprint(account_blueprint)
-            from musocial.views.api import api_blueprint
+            from usocial.views.api import api_blueprint
             app.register_blueprint(api_blueprint)
-            from musocial.views.feed import feed_blueprint
+            from usocial.views.feed import feed_blueprint
             app.register_blueprint(feed_blueprint)
-            from musocial.views.main import main_blueprint
+            from usocial.views.main import main_blueprint
             app.register_blueprint(main_blueprint)
             self.initialized = True
         return super().__call__(environ, start_response)
@@ -58,7 +58,7 @@ jwt = JWTManager(app)
 @app.cli.command("create-db")
 @with_appcontext
 def create_db():
-    from musocial import models
+    from usocial import models
     models.create_all()
 
 @jwt.token_verification_failed_loader
@@ -75,7 +75,7 @@ def jwt_token_expired(_jwt_header, jwt_data):
 @jwt.user_lookup_loader
 def load_user(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
-    from musocial import models
+    from usocial import models
     return models.User.query.filter_by(username=identity).one_or_none()
 
 def jwt_required_wrapper(refresh):

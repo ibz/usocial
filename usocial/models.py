@@ -6,8 +6,8 @@ from urllib.parse import urlparse
 
 from babel.dates import format_timedelta
 
-from musocial.main import app, db, bcrypt
-from musocial.parser import strip_protocol
+from usocial.main import app, db, bcrypt
+from usocial.parser import strip_protocol
 
 
 class User(db.Model):

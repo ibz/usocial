@@ -7,7 +7,7 @@ from nltk.stem.wordnet import WordNetLemmatizer
 import re
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
-from musocial import models
+from usocial import models
 
 
 def extract_topn_from_vector(feature_names, sorted_items, topn=10):

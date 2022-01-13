@@ -3,8 +3,8 @@ from flask_jwt_extended import create_access_token, create_refresh_token, curren
 from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
-from musocial import forms, models as m
-from musocial.main import app, db, jwt_required
+from usocial import forms, models as m
+from usocial.main import app, db, jwt_required
 
 account_blueprint = Blueprint('account', __name__)
 

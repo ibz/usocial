@@ -9,9 +9,9 @@ from urllib.parse import urlparse
 
 import podcastindex
 
-from musocial import forms, models as m
-from musocial.parser import extract_feed_links, parse_feed
-from musocial.main import db, jwt_required
+from usocial import forms, models as m
+from usocial.parser import extract_feed_links, parse_feed
+from usocial.main import db, jwt_required
 
 import config
 

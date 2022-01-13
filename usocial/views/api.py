@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
-from musocial import models
-from musocial.main import db, csrf
+from usocial import models
+from usocial.main import db, csrf
 
 api_blueprint = Blueprint('api', __name__)
 

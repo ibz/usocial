@@ -1,9 +1,9 @@
 from datetime import datetime
 import sys
 
-from musocial import models
-from musocial.main import db
-from musocial.parser import parse_feed
+from usocial import models
+from usocial.main import db
+from usocial.parser import parse_feed
 
 def fetch_feed(feed):
     print("Fetching %s" % feed.url)

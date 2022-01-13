@@ -1,6 +1,6 @@
 FROM python:3.8-buster
 
-COPY ./musocial /musocial
+COPY ./usocial /usocial
 COPY requirements.txt /
 COPY config.py /
 COPY start.sh /
@@ -13,11 +13,11 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r /requirements.txt
 ENV INSTANCE_PATH=/instance
 VOLUME ["/instance"]
 
-RUN groupadd -r musocial --gid=1000 && useradd -r -g musocial --uid=1000 --create-home --shell /bin/bash musocial
+RUN groupadd -r usocial --gid=1000 && useradd -r -g usocial --uid=1000 --create-home --shell /bin/bash usocial
 
-USER musocial
+USER usocial
 
-WORKDIR /musocial
+WORKDIR /usocial
 
 EXPOSE 5000
 

@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, render_template, Response, url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, current_user, set_access_cookies, set_refresh_cookies, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
 
-from musocial import models
+from usocial import models
 
 import config
 

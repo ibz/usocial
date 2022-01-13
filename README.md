@@ -1,8 +1,8 @@
-Read more at [musocial.me](http://musocial.me).
+Read more at [usocial.me](http://usocial.me).
 
-## Running musocial
+## Running usocial
 
-If you want to just run **musocial** on your laptop, home server or VPS, [check the instructions here](https://musocial.me/running).
+If you want to just run **usocial** on your laptop, home server or VPS, [check the instructions here](https://usocial.me/running).
 
 If you want to debug or edit the code, keep reading.
 
@@ -10,7 +10,7 @@ If you want to debug or edit the code, keep reading.
 
 1. Clone the repo
 
-   `git clone https://github.com/ibz/musocial.git && cd musocial`
+   `git clone https://github.com/ibz/usocial.git && cd usocial`
 
 1. Set up a venv
 
@@ -29,7 +29,7 @@ If you want to debug or edit the code, keep reading.
    ```echo "SECRET_KEY = '"`python3 -c 'import os;print(os.urandom(12).hex())'`"'" > instance/config.py```
 1. Export the environment variables (`FLASK_APP` is required, `FLASK_ENV` makes Flask automatically restart when you edit a file)
 
-   `export FLASK_APP=musocial.main FLASK_ENV=development`
+   `export FLASK_APP=usocial.main FLASK_ENV=development`
 1. Create the database (this will also create the default user, "me", without a password)
 
    `flask create-db`

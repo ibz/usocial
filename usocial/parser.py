@@ -12,7 +12,7 @@ from xml.etree.ElementTree import fromstring, ElementTree, ParseError
 
 import config
 
-from musocial.main import app
+from usocial.main import app
 
 PODCAST_NAMESPACE_URI = 'https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md'
 HEADERS = {'User-Agent': config.USER_AGENT}
