@@ -1,5 +1,7 @@
 #! /usr/bin/env bash
 
+set -e
+
 if [ ! -f /instance/config.py ]; then
     echo "SECRET_KEY = '"`python -c 'import os;print(os.urandom(12).hex())'`"'" > /instance/config.py
 fi
