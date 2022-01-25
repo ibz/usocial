@@ -202,6 +202,7 @@ class UserItem(db.Model):
     item = db.relationship(Item)
     liked = db.Column(db.Boolean, nullable=False, default=False)
     read = db.Column(db.Boolean, nullable=False, default=False)
+    play_position = db.Column(db.Integer, nullable=False, default=0)
     played_value_count = db.Column(db.Integer, nullable=False, default=0)
     paid_value_count = db.Column(db.Integer, nullable=False, default=0)
 
