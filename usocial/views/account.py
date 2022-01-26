@@ -3,7 +3,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, curren
 from flask_jwt_extended import get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 
-from usocial import forms, models as m
+from usocial import forms, models as m, payments
 from usocial.main import app, db, jwt_required
 
 account_blueprint = Blueprint('account', __name__)
@@ -130,11 +130,18 @@ def pay():
         if form.validate_on_submit():
             item_ids = [int(id) for id in form.data['paid_for_items'].split(',')]
             user_items = m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.item_id.in_(item_ids)).all()
+            # save payments first (and commit after each one!)
+            # in case one of them fails, at least we manage to save the successful ones in our DB
+            # TODO: deal with failures in some better way
+            for payment_data in form.data['payments']:
+                recipient = m.ValueRecipient.query.filter_by(id=payment_data['recipient']['id']).one_or_none()
+                payments.send_payment(recipient.address, payment_data['amount'])
+                payment = m.ValuePayment(recipient_id=payment_data['recipient']['id'], amount=payment_data['amount'])
+                db.session.add(payment)
+                db.session.commit()
+            # if all payments succeeded, we can mark user items as paid
             for user_item in user_items:
                 user_item.paid_value_count = user_item.played_value_count
                 db.session.add(user_item)
-            for payment_data in form.data['payments']:
-                payment = m.ValuePayment(recipient_id=payment_data['recipient']['id'], amount=payment_data['amount'])
-                db.session.add(payment)
             db.session.commit()
         return redirect(url_for('account.me'))

@@ -7,6 +7,7 @@ Flask-Cors
 Flask-JWT-Extended
 Flask-Migrate
 Flask-WTF
+lnd-grpc-client
 pytest
 python-dateutil
 python-podcastindex
