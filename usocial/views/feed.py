@@ -233,6 +233,13 @@ def hide_item(feed_id, item_id):
         ui.read = bool(int(request.form['value']))
     return update_item(item_id, update)
 
+@feed_blueprint.route('/feeds/<int:feed_id>/items/<int:item_id>/position', methods=['POST'])
+@jwt_required
+def update_item_position(feed_id, item_id):
+    def update(ui):
+        ui.play_position = int(float(request.form['value']))
+    return update_item(item_id, update)
+
 # NB: the "value" here refers to the podcast:value interval which is a minute
 # see: https://github.com/Podcastindex-org/podcast-namespace/blob/main/value/value.md#payment-intervals
 @feed_blueprint.route('/feeds/<int:feed_id>/items/<int:item_id>/played-value', methods=['POST'])

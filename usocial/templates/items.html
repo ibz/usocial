@@ -65,6 +65,7 @@
                 data-feed_id="{{ feed_id }}"
                 data-enclosure_url="{{ enclosure_url }}"
                 data-enclosure_type="{{ enclosure_type }}"
+                data-play_position="{{ user_item.play_position }}"
                 data-csrf_token="{{ csrf_token() }}"
                 {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
                 class="item {% if enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"

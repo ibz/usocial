@@ -1,7 +1,7 @@
-// NB: VALUE_HEARTBEAT_DELAY * VALUE_HEARTBEAT_COUNT should always be 60000 (1 minute)
+// NB: PODCAST_HEARTBEAT_DELAY * PODCAST_VALUE_HEARTBEAT_COUNT should always be 60000 (1 minute)
 // see: https://github.com/Podcastindex-org/podcast-namespace/blob/main/value/value.md#payment-intervals
-VALUE_HEARTBEAT_DELAY = 1000;
-VALUE_HEARTBEAT_COUNT = 60;
+PODCAST_HEARTBEAT_DELAY = 1000;
+PODCAST_VALUE_HEARTBEAT_COUNT = 60;
 
 function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -69,6 +69,13 @@ function hideItem(feedId, itemId, value) {
     );
 }
 
+function updatePodcastItemPosition(feedId, itemId, position) {
+    var item = document.getElementById('item-' + itemId);
+    item.dataset.play_position = position.toString();
+    doPost(`/feeds/${feedId}/items/${itemId}/position`, `value=${position}`, item.dataset.csrf_token,
+        function(_) { });
+}
+
 function playedItemValue(feedId, itemId, value) {
     var item = document.getElementById('item-' + itemId);
     doPost(`/feeds/${feedId}/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
@@ -113,18 +120,24 @@ function unfollowPodcast(podcastindex_id, url, csrf_token) {
     );
 }
 
-function valueHeartbeat(feedId, itemId) {
+function podcastHeartbeat(feedId, itemId) {
     var player = document.getElementById('podcastPlayer');
     if (player.duration > 0 && !player.paused) {
+        var source = document.getElementById('audioSource');
+        var item = document.getElementById('item-' + itemId);
+        if (source.src === item.dataset.enclosure_url) { // currently playing item could have changed in the last second!
+            updatePodcastItemPosition(feedId, itemId, player.currentTime);
+        }
+
         if (!player.valueHeartbeatCount) {
             player.valueHeartbeatCount = 0;
         }
         player.valueHeartbeatCount += 1;
-        if (player.valueHeartbeatCount == VALUE_HEARTBEAT_COUNT) {
+        if (player.valueHeartbeatCount == PODCAST_VALUE_HEARTBEAT_COUNT) {
             playedItemValue(feedId, itemId, 1);
             player.valueHeartbeatCount = 0;
         }
-        setTimeout(function() { valueHeartbeat(feedId, itemId) }, VALUE_HEARTBEAT_DELAY);
+        setTimeout(function() { podcastHeartbeat(feedId, itemId) }, PODCAST_HEARTBEAT_DELAY);
     }
 }
 
@@ -143,7 +156,7 @@ function playPodcastItem(feedId, itemId) {
     var player = document.getElementById('podcastPlayer');
     player.onplay = function() {
         if (item.dataset.has_value_spec) {
-            setTimeout(function() { valueHeartbeat(feedId, itemId) }, VALUE_HEARTBEAT_DELAY);
+            setTimeout(function() { podcastHeartbeat(feedId, itemId) }, PODCAST_HEARTBEAT_DELAY);
         }
     }
     player.onended = function() {
@@ -167,6 +180,7 @@ function playPodcastItem(feedId, itemId) {
         }
     }
     player.load();
+    player.currentTime = parseFloat(item.dataset.play_position);
     player.play();
 }
 
