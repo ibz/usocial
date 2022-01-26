@@ -31,7 +31,7 @@ def register():
         return redirect(url_for('feed.items'))
 
     if request.method == 'GET':
-        return render_template('account/register.html', form=forms.RegisterForm())
+        return render_template('register.html', form=forms.RegisterForm())
 
     error = None
     username = request.form['username']
@@ -59,7 +59,7 @@ def login():
         return redirect(url_for('feed.items'))
 
     if request.method == 'GET':
-        return render_template('account/login.html', user=None, form=forms.LoginForm())
+        return render_template('login.html', user=None, form=forms.LoginForm())
 
     username = request.form['username']
     password = request.form['password']
@@ -93,13 +93,13 @@ def me():
         db.func.coalesce(db.func.sum(m.UserItem.paid_value_count), 0)])
     played_value, paid_value = q.session.execute(sum_q).one()
 
-    return render_template('account/me.html', user=current_user, played_value=played_value, paid_value=paid_value)
+    return render_template('me.html', user=current_user, played_value=played_value, paid_value=paid_value)
 
 @account_blueprint.route('/account/password', methods=['GET', 'POST'])
 @jwt_required
 def password():
     if request.method == 'GET':
-        return render_template('account/password.html', user=current_user,
+        return render_template('password.html', user=current_user,
             form=forms.NewPasswordForm(),
             jwt_csrf_token=request.cookies.get('csrf_access_token'))
     else:
