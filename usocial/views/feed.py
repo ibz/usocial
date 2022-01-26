@@ -51,8 +51,11 @@ def get_items_feeds(feed_id, q):
 def items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.read == False)
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
+    played_value, paid_value = feed.karma(current_user) if feed else (0, 0)
     show_player = items and all(i[4] for i in items)
-    return render_template('items.html', feeds=feeds, items=items, counts=counts, feed=feed, show_player=show_player, user=current_user)
+    return render_template('items.html', feeds=feeds, items=items, counts=counts,
+        feed=feed, played_value=played_value, paid_value=paid_value,
+        show_player=show_player, user=current_user)
 
 @feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'])
@@ -60,8 +63,11 @@ def items(feed_id=None):
 def liked_items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.liked == True)
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
+    played_value, paid_value = feed.karma(current_user) if feed else (0, 0)
     show_player = items and all(i[4] for i in items)
-    return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True, feed=feed, show_player=show_player, user=current_user)
+    return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True,
+        feed=feed, played_value=played_value, paid_value=paid_value,
+        show_player=show_player, user=current_user)
 
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
 @jwt_required

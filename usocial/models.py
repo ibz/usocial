@@ -77,6 +77,14 @@ class Feed(db.Model):
         value_specs = [s for s in self.value_specs if s.item_id is None]
         return value_specs[0] if value_specs else None
 
+    def karma(self, user):
+        q = db.session.query(UserItem).filter(UserItem.user_id == user.id, UserItem.item_id == Item.id, Item.feed_id == self.id)
+        sum_q = q.statement.with_only_columns([
+            db.func.coalesce(db.func.sum(UserItem.played_value_count), 0),
+            db.func.coalesce(db.func.sum(UserItem.paid_value_count), 0)])
+        played_value, paid_value = q.session.execute(sum_q).one()
+        return played_value, paid_value
+
     def update(self, parsed_feed):
         self.fetched_at = datetime.now()
         if not parsed_feed:
