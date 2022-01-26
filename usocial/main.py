@@ -39,8 +39,6 @@ class MyFlask(Flask):
             app.register_blueprint(api_blueprint)
             from usocial.views.feed import feed_blueprint
             app.register_blueprint(feed_blueprint)
-            from usocial.views.main import main_blueprint
-            app.register_blueprint(main_blueprint)
             self.initialized = True
         return super().__call__(environ, start_response)
 
