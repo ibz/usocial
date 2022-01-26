@@ -256,7 +256,7 @@ class ValuePayment(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey(ValueRecipient.id))
-    date = db.Column(db.DateTime, nullable=False, default=datetime.now())
+    date = db.Column(db.DateTime, nullable=False, default=datetime.now)
     amount = db.Column(db.Integer, nullable=False)
 
 def create_all():
