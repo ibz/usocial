@@ -129,13 +129,13 @@ def pay():
         form = forms.PaymentListForm()
         if form.validate_on_submit():
             item_ids = [int(id) for id in form.data['paid_for_items'].split(',')]
-            user_items = m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.item_id.in_(item_ids)).all()
+            user_items = list(m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.item_id.in_(item_ids)).all())
             # save payments first (and commit after each one!)
             # in case one of them fails, at least we manage to save the successful ones in our DB
             # TODO: deal with failures in some better way
             for payment_data in form.data['payments']:
                 recipient = m.ValueRecipient.query.filter_by(id=payment_data['recipient']['id']).one_or_none()
-                payments.send_payment(recipient.address, payment_data['amount'])
+                payments.send_payment(recipient.address, payment_data['amount'], payments.ACTION_STREAM, user_items)
                 payment = m.ValuePayment(recipient_id=payment_data['recipient']['id'], amount=payment_data['amount'])
                 db.session.add(payment)
                 db.session.commit()
