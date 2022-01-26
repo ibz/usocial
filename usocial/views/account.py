@@ -110,7 +110,7 @@ def pay():
         for ui in m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.played_value_count > m.UserItem.paid_value_count).all():
             item_ids.append(ui.item_id)
             value_spec = ui.value_spec
-            for recipient_id, amount in value_spec.split_sats(value_spec.sats_amount * (ui.played_value_count - ui.paid_value_count)).items():
+            for recipient_id, amount in value_spec.split_amount(value_spec.sats_amount * (ui.played_value_count - ui.paid_value_count)).items():
                 amounts[recipient_id] = amounts.get(recipient_id, 0) + amount
 
         form = forms.PaymentListForm()

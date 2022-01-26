@@ -233,9 +233,10 @@ class ValueSpec(db.Model):
 
     @property
     def sats_amount(self):
-        return int(round(self.suggested_amount * 1000 * 100000000, 2))
+        sats = round(self.suggested_amount * 100000000, 3)
+        return int(sats) if sats == int(sats) else sats
 
-    def split_sats(self, amount):
+    def split_amount(self, amount):
         shares = {r.id: r.split for r in self.recipients}
         total_shares = sum(shares.values())
         return {r_id: amount * (r_shares / total_shares) for r_id, r_shares in shares.items()}
