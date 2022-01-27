@@ -121,10 +121,14 @@ def logout():
 @account_blueprint.route('/account/pay', methods=['GET', 'POST'])
 @jwt_required
 def pay():
+    feed_id = request.args.get('feed_id')
     if request.method == 'GET':
+        user_items = m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.played_value_count > m.UserItem.paid_value_count)
+        if feed_id:
+            user_items = user_items.filter(m.UserItem.item_id == m.Item.id).filter(m.Item.feed_id == feed_id)
         amounts = {}
         item_ids = []
-        for ui in m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.played_value_count > m.UserItem.paid_value_count).all():
+        for ui in user_items.all():
             item_ids.append(ui.item_id)
             value_spec = ui.value_spec
             for recipient_id, amount in value_spec.split_amount(value_spec.sats_amount * (ui.played_value_count - ui.paid_value_count)).items():
@@ -147,18 +151,31 @@ def pay():
         if form.validate_on_submit():
             item_ids = [int(id) for id in form.data['paid_for_items'].split(',')]
             user_items = list(m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.item_id.in_(item_ids)).all())
-            # save payments first (and commit after each one!)
-            # in case one of them fails, at least we manage to save the successful ones in our DB
-            # TODO: deal with failures in some better way
+            # TODO: deal with failures in some way!
+            # What we want is to detect failures and save them in the DB for later retry.
+            # The issue is that payments are done per-address, but one payment refers to a *batch* of items,
+            # and we want the status in the app to be per-item rather than per-address!
+            # It could happen that we try to pay for a batch of 5 items to 4 different addresses:
+            #  - the first 3 succeed (payments for 5 items to 3 different addresses)
+            #  - but the last payment (payment to one address for all 5 items) fails
+            #  Of course, the question is - how do we want to represent this in the UI?
+            #  We *probably* want the UI to say that the items were paid for but there were some errors that should be retried.
+            #  Saying the items were *not* paid would be wrong, because we would retry and re-send some of the successful payments!
+            success_count = 0
             for payment_data in form.data['payments']:
-                recipient = m.ValueRecipient.query.filter_by(id=payment_data['recipient']['id']).one_or_none()
-                payments.send_payment(recipient.address, payment_data['amount'], payments.ACTION_STREAM, user_items)
-                payment = m.ValuePayment(recipient_id=payment_data['recipient']['id'], amount=payment_data['amount'])
-                db.session.add(payment)
+                recipient = m.ValueRecipient.query.filter_by(id=payment_data['recipient']['id']).first()
+                try:
+                    payments.send_stream_payment(recipient.address, payment_data['amount'], user_items)
+                    success_count += 1
+                except payments.PaymentFailed:
+                    pass # TODO: save error in the DB!
+            if success_count != 0:
+                for user_item in user_items:
+                    user_item.paid_value_count = user_item.played_value_count
                 db.session.commit()
-            # if all payments succeeded, we can mark user items as paid
-            for user_item in user_items:
-                user_item.paid_value_count = user_item.played_value_count
-                db.session.add(user_item)
-            db.session.commit()
-        return redirect(url_for('account.me'))
+            else:
+                flash("All payments failed")
+        if feed_id:
+            return redirect(url_for('feed.items', feed_id=feed_id))
+        else:
+            return redirect(url_for('account.me'))
