@@ -151,7 +151,6 @@ def pay():
         if form.validate_on_submit():
             item_ids = [int(id) for id in form.data['paid_for_items'].split(',')]
             user_items = list(m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.item_id.in_(item_ids)).all())
-            # TODO: deal with failures in some way!
             # What we want is to detect failures and save them in the DB for later retry.
             # The issue is that payments are done per-address, but one payment refers to a *batch* of items,
             # and we want the status in the app to be per-item rather than per-address!
@@ -167,8 +166,15 @@ def pay():
                 try:
                     payments.send_stream_payment(recipient.address, payment_data['amount'], user_items)
                     success_count += 1
-                except payments.PaymentFailed:
-                    pass # TODO: save error in the DB!
+                except payments.PaymentFailed as e:
+                    app.logger.exception(e)
+                    err = m.PaymentError(
+                        user_id=current_user.id,
+                        address=recipient.address, amount=payment_data['amount'],
+                        item_ids=",".join(str(ui.item_id) for ui in user_items),
+                        message=str(e))
+                    db.session.add(err)
+                    db.session.commit()
             if success_count != 0:
                 for user_item in user_items:
                     user_item.stream_value_paid = user_item.stream_value_played

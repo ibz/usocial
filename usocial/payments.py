@@ -19,7 +19,6 @@ class PaymentFailed(Exception):
 
 def get_lnd_client():
     if not all([config.LND_IP, config.LND_GRPC_PORT, config.LND_DIR]):
-        app.logger.error("LND not configured.")
         return None
     return LNDClient("%s:%s" % (config.LND_IP, config.LND_GRPC_PORT),
         macaroon_filepath=os.path.join(config.LND_DIR, "data/chain/bitcoin/mainnet/admin.macaroon"),
@@ -28,7 +27,7 @@ def get_lnd_client():
 def send_stream_payment(address, amount, user_items):
     lnd = get_lnd_client()
     if not lnd:
-        raise PaymentFailed()
+        raise PaymentFailed("LND not configured.")
     preimage = secrets.token_bytes(32)
     tlv = []
     for user_item in user_items:

@@ -259,6 +259,17 @@ class ValueRecipient(db.Model):
     address = db.Column(db.String(100), nullable=False)
     split = db.Column(db.Integer, nullable=False)
 
+class PaymentError(db.Model):
+    __tablename__ = 'payment_errors'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    address = db.Column(db.String(100), nullable=False)
+    amount = db.Column(db.Integer, nullable=False)
+    item_ids = db.Column(db.String(1000), nullable=False)
+    message = db.Column(db.String(1000), nullable=False)
+
 def create_all():
     db.create_all()
 
