@@ -2,7 +2,7 @@
 {% block content %}
 
 {% if not liked %}
-  my feeds <a href="{{ url_for('feed.add_website') }}" title="add blog">+ <i class="fas fa-blog"></i></a> <a href="{{ url_for('feed.search_podcasts') }}" title="add podcast">+ <i class="fas fa-podcast"></i></a>
+  <a href="{{ url_for('feed.add_website') }}" title="add blog">+ <i class="fas fa-blog"></i></a> <a href="{{ url_for('feed.search_podcasts') }}" title="add podcast">+ <i class="fas fa-podcast"></i></a>
 {% endif %}
 
 {% set feed_value_spec = feed.value_spec %}
@@ -25,10 +25,10 @@
             onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;">
             <td id="feed-{{ feed.id }}" class="feed-actions feed-followed-1">
                 <span class="unfollow-link">
-                    <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye"></i></span>
+                    <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i title="unfollow" class="far fa-eye"></i></span>
                 </span>
                 <span class="follow-link">
-                    <span onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href=""><i class="far fa-eye-slash"></i></span>
+                    <span onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href=""><i title="follow" class="far fa-eye-slash"></i></span>
                 </span>
             </td>
             <td id="feed-{{ feed.id }}">
@@ -52,7 +52,7 @@
 {% if feed %}
 <table class="feed-details">
     {% if feed_value_spec and feed_value_spec.is_supported %}
-    <tr><td>Suggested contribution:</td><td>{{ feed_value_spec.sats_amount }} sats / minute @{{ feed_value_spec.protocol }}</td></tr>
+    <tr><td>Contribution:</td><td>{{ feed_value_spec.sats_amount }} sats / minute @{{ feed_value_spec.protocol }}</td></tr>
     <tr><td>Played:</td><td>{{ played_value }} minutes</td></tr>
     <tr><td>Paid:</td><td>{{ paid_value }} minutes {% if paid_value < played_value %}<a href="{{ url_for('account.pay') }}?feed_id={{ feed.id }}" title="send payment"><i class="fas fa-bolt"></i></a>{% endif %}</td></tr>
     {% endif %}
@@ -73,21 +73,21 @@
                 class="item {% if enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
                 onclick="itemClick(event, {{ feed_id }}, {{ user_item.item_id }}); return false;">
                 <span class="unlike-link">
-                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i class="fas fa-heart" style="font-weight: solid;"></i></span>
+                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i title="unlike" class="fas fa-heart" style="font-weight: solid;"></i></span>
                 </span>
                 <span class="like-link">
-                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i class="far fa-heart" style="font-weight: regular;"></i></span>
+                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i title="like" class="far fa-heart" style="font-weight: regular;"></i></span>
                 </span>
                 {% if not liked %}
                 <span class="unhide-link">
-                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i class="fas fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i title="undelete" class="fas fa-trash-alt"></i></span>
                 </span>
                 <span class="hide-link">
-                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i class="far fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i title="delete" class="far fa-trash-alt"></i></span>
                 </span>
                 {% endif %}
                 <span class="open-link">
-                    <span href="" onclick="window.open('{{ url }}', '_blank'); return false;"><i class="fas fa-external-link-square-alt"></i></span>
+                    <span href="" onclick="window.open('{{ url }}', '_blank'); return false;"><i title="open" class="fas fa-external-link-square-alt"></i></span>
                 </span>
                 {{ title }}
         </td>

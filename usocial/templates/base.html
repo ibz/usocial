@@ -17,8 +17,8 @@
                     <tr>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('feed.items') }}">feeds</a> |
-                            <a href="{{ url_for('feed.liked_items') }}">liked</a>
+                            <a href="{{ url_for('feed.items') }}"><i title="my feeds" class="fas fa-rss"></i></a> |
+                            <a href="{{ url_for('feed.liked_items') }}"><i title="liked items" class="fas fa-heart"></i></a>
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
