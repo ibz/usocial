@@ -125,17 +125,20 @@ function podcastHeartbeat(feedId, itemId) {
     if (player.duration > 0 && !player.paused) {
         var source = document.getElementById('audioSource');
         var item = document.getElementById('item-' + itemId);
+
         if (source.src === item.dataset.enclosure_url) { // currently playing item could have changed in the last second!
             updatePodcastItemPosition(feedId, itemId, player.currentTime);
         }
 
-        if (!player.valueHeartbeatCount) {
-            player.valueHeartbeatCount = 0;
-        }
-        player.valueHeartbeatCount += 1;
-        if (player.valueHeartbeatCount == PODCAST_VALUE_HEARTBEAT_COUNT) {
-            playedItemValue(feedId, itemId, 1);
-            player.valueHeartbeatCount = 0;
+        if (item.dataset.has_value_spec) {
+            if (!player.valueHeartbeatCount) {
+                player.valueHeartbeatCount = 0;
+            }
+            player.valueHeartbeatCount += 1;
+            if (player.valueHeartbeatCount == PODCAST_VALUE_HEARTBEAT_COUNT) {
+                playedItemValue(feedId, itemId, 1);
+                player.valueHeartbeatCount = 0;
+            }
         }
         setTimeout(function() { podcastHeartbeat(feedId, itemId) }, PODCAST_HEARTBEAT_DELAY);
     }
@@ -155,9 +158,7 @@ function playPodcastItem(feedId, itemId) {
 
     var player = document.getElementById('podcastPlayer');
     player.onplay = function() {
-        if (item.dataset.has_value_spec) {
-            setTimeout(function() { podcastHeartbeat(feedId, itemId) }, PODCAST_HEARTBEAT_DELAY);
-        }
+        setTimeout(function() { podcastHeartbeat(feedId, itemId) }, PODCAST_HEARTBEAT_DELAY);
     }
     player.onended = function() {
         var currItem = null;
