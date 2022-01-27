@@ -252,5 +252,5 @@ def update_item_position(feed_id, item_id):
 @jwt_required
 def increment_value_item(feed_id, item_id):
     def update(ui):
-        ui.played_value_count += int(request.form['value'])
+        ui.stream_value_played += int(request.form['value'])
     return update_item(item_id, update)

@@ -89,8 +89,8 @@ def login():
 def me():
     q = db.session.query(m.UserItem).filter_by(user_id=current_user.id)
     sum_q = q.statement.with_only_columns([
-        db.func.coalesce(db.func.sum(m.UserItem.played_value_count), 0),
-        db.func.coalesce(db.func.sum(m.UserItem.paid_value_count), 0)])
+        db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
+        db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
     played_value, paid_value = q.session.execute(sum_q).one()
 
     return render_template('me.html', user=current_user, played_value=played_value, paid_value=paid_value)
@@ -123,7 +123,7 @@ def logout():
 def pay():
     feed_id = request.args.get('feed_id')
     if request.method == 'GET':
-        user_items = m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.played_value_count > m.UserItem.paid_value_count)
+        user_items = m.UserItem.query.filter(m.UserItem.user == current_user, m.UserItem.stream_value_played > m.UserItem.stream_value_paid)
         if feed_id:
             user_items = user_items.filter(m.UserItem.item_id == m.Item.id).filter(m.Item.feed_id == feed_id)
         amounts = {}
@@ -131,7 +131,7 @@ def pay():
         for ui in user_items.all():
             item_ids.append(ui.item_id)
             value_spec = ui.value_spec
-            for recipient_id, amount in value_spec.split_amount(value_spec.sats_amount * (ui.played_value_count - ui.paid_value_count)).items():
+            for recipient_id, amount in value_spec.split_amount(value_spec.sats_amount * (ui.stream_value_played - ui.stream_value_paid)).items():
                 amounts[recipient_id] = amounts.get(recipient_id, 0) + amount
 
         form = forms.PaymentListForm()
@@ -171,7 +171,7 @@ def pay():
                     pass # TODO: save error in the DB!
             if success_count != 0:
                 for user_item in user_items:
-                    user_item.paid_value_count = user_item.played_value_count
+                    user_item.stream_value_paid = user_item.stream_value_played
                 db.session.commit()
             else:
                 flash("All payments failed")

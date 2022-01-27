@@ -80,8 +80,8 @@ class Feed(db.Model):
     def karma(self, user):
         q = db.session.query(UserItem).filter(UserItem.user_id == user.id, UserItem.item_id == Item.id, Item.feed_id == self.id)
         sum_q = q.statement.with_only_columns([
-            db.func.coalesce(db.func.sum(UserItem.played_value_count), 0),
-            db.func.coalesce(db.func.sum(UserItem.paid_value_count), 0)])
+            db.func.coalesce(db.func.sum(UserItem.stream_value_played), 0),
+            db.func.coalesce(db.func.sum(UserItem.stream_value_paid), 0)])
         played_value, paid_value = q.session.execute(sum_q).one()
         return played_value, paid_value
 
@@ -211,8 +211,8 @@ class UserItem(db.Model):
     liked = db.Column(db.Boolean, nullable=False, default=False)
     read = db.Column(db.Boolean, nullable=False, default=False)
     play_position = db.Column(db.Integer, nullable=False, default=0)
-    played_value_count = db.Column(db.Integer, nullable=False, default=0)
-    paid_value_count = db.Column(db.Integer, nullable=False, default=0)
+    stream_value_played = db.Column(db.Integer, nullable=False, default=0)
+    stream_value_paid = db.Column(db.Integer, nullable=False, default=0)
 
     @property
     def value_spec(self):
