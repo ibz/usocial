@@ -12,7 +12,7 @@ import config
 KEYSEND_PREIMAGE = 5482373484
 PODCAST = 7629169
 
-APP_NAME = 'usocial.me'
+APP_NAME = 'usocial'
 
 class PaymentFailed(Exception):
     pass
