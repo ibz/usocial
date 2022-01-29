@@ -265,6 +265,23 @@ class ValueRecipient(db.Model):
     custom_value = db.Column(db.String(100))
     split = db.Column(db.Integer, nullable=False)
 
+class Boost(db.Model):
+    __tablename__ = 'boosts'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey(Item.id), nullable=False)
+    ts = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Integer, nullable=False)
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            [user_id, item_id],
+            [UserItem.user_id, UserItem.item_id],
+        ),
+    )
+
 class PaymentError(db.Model):
     __tablename__ = 'payment_errors'
 
