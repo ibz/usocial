@@ -33,11 +33,11 @@ class MyFlask(Flask):
 
     def __call__(self, environ, start_response):
         if not self.initialized:
-            from usocial.views.account import account_blueprint
+            from usocial.controllers.account import account_blueprint
             app.register_blueprint(account_blueprint)
-            from usocial.views.api import api_blueprint
+            from usocial.controllers.api import api_blueprint
             app.register_blueprint(api_blueprint)
-            from usocial.views.feed import feed_blueprint
+            from usocial.controllers.feed import feed_blueprint
             app.register_blueprint(feed_blueprint)
             self.initialized = True
         return super().__call__(environ, start_response)
