@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, current_user, get_jwt_identity, set_access_cookies, set_refresh_cookies, unset_jwt_cookies, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from sqlalchemy.exc import IntegrityError
@@ -117,6 +117,14 @@ def logout():
     response = redirect(url_for('feed.items'))
     unset_jwt_cookies(response)
     return response
+
+@account_blueprint.route('/account/volume', methods=['POST'])
+@jwt_required
+def update_volume():
+    current_user.audio_volume = float(request.form['value'])
+    db.session.add(current_user)
+    db.session.commit()
+    return jsonify(ok=True)
 
 @account_blueprint.route('/account/pay', methods=['GET', 'POST'])
 @jwt_required

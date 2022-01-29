@@ -78,6 +78,9 @@ function updatePodcastItemPosition(feedId, itemId, position) {
 
 function playedItemValue(feedId, itemId, value) {
     var item = document.getElementById('item-' + itemId);
+    var el_played_minutes = document.getElementById('played-minutes');
+    var playedMinutes = parseInt(el_played_minutes.innerText);
+    el_played_minutes.innerText = (playedMinutes + value).toString();
     doPost(`/feeds/${feedId}/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
         function(_) { });
 }
@@ -185,6 +188,12 @@ function playPodcastItem(feedId, itemId) {
     player.play();
 }
 
+function podcastPlayerVolumeChanged() {
+    var player = document.getElementById('podcastPlayer');
+    doPost(`/account/volume`, `value=${player.volume}`, player.dataset.csrf_token,
+        function(_) { });
+}
+
 function itemClick(e, feedId, itemId) {
     if (hasParentWithClass(e.target, ['like-link', 'unlike-link', 'hide-link', 'unhide-link', 'open-link'])) {
         return;
@@ -202,4 +211,11 @@ function feedClick(e, feedId, liked) {
     }
 
     window.location = `/feeds/${feedId ? feedId : "all"}/items` + (liked ? '/liked' : '');
+}
+
+function onBodyLoad() {
+    var player = document.getElementById('podcastPlayer');
+    if (player) {
+        player.volume = parseFloat(player.dataset.volume);
+    }
 }

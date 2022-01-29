@@ -45,7 +45,7 @@
 {% if show_player %}
 <table class="fullWidthTable">
 <tr><td>
-<audio id="podcastPlayer" controls>
+<audio id="podcastPlayer" controls="controls" onvolumechange="podcastPlayerVolumeChanged();" data-csrf_token="{{ csrf_token() }}" data-volume="{{ user.audio_volume }}">
     <source id="audioSource" src="" type=""></source>
     Your browser does not support the audio tag.
 </audio>
@@ -56,9 +56,9 @@
 {% if feed %}
 <table class="feed-details">
     {% if feed_value_spec and feed_value_spec.is_supported %}
-    <tr><td>Contribution:</td><td>{{ feed_value_spec.sats_amount }} sats / minute @{{ feed_value_spec.protocol }}</td></tr>
-    <tr><td>Played:</td><td>{{ played_value }} minutes</td></tr>
-    <tr><td>Paid:</td><td>{{ paid_value }} minutes {% if paid_value < played_value %}<a href="{{ url_for('account.pay') }}?feed_id={{ feed.id }}" title="send payment"><i class="fas fa-bolt"></i></a>{% endif %}</td></tr>
+    <tr><td>Contribution</td><td>{{ feed_value_spec.sats_amount }} sats / minute @{{ feed_value_spec.protocol }}</td></tr>
+    <tr><td>Played</td><td><span id="played-minutes">{{ played_value }}</span> minutes</td></tr>
+    <tr><td>Paid</td><td>{{ paid_value }} minutes {% if paid_value < played_value %}<a href="{{ url_for('account.pay') }}?feed_id={{ feed.id }}" title="send payment"><i class="fas fa-bolt"></i></a>{% endif %}</td></tr>
     {% endif %}
 </table>
 {% endif %}
