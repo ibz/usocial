@@ -22,6 +22,8 @@ class User(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=False)
 
+    audio_volume = db.Column(db.Float, nullable=False, default=1.0)
+
     groups = db.relationship('Group', backref='user')
 
     def __init__(self, username):
