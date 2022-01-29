@@ -24,7 +24,7 @@ def get_lnd_client():
         macaroon_filepath=os.path.join(config.LND_DIR, "data/chain/bitcoin/mainnet/admin.macaroon"),
         cert_filepath=os.path.join(config.LND_DIR, "tls.cert"))
 
-def send_stream_payment(address, amount, user_items):
+def send_stream_payment(recipient, amount, user_items):
     lnd = get_lnd_client()
     if not lnd:
         raise PaymentFailed("LND not configured.")
@@ -45,12 +45,19 @@ def send_stream_payment(address, amount, user_items):
     custom_records = {KEYSEND_PREIMAGE: preimage}
     if tlv:
         custom_records.update({PODCAST: json.dumps(tlv).encode('utf-8')})
-    ret = lnd.send_payment_v2(dest=bytes.fromhex(address), amt=amount,
+    if recipient.custom_key:
+        try:
+            custom_key = int(recipient.custom_key)
+        except ValueError:
+            custom_key = recipient.custom_key
+        if custom_key not in custom_records:
+            custom_records.update({custom_key: (recipient.custom_value or "").encode('utf-8')})
+    ret = lnd.send_payment_v2(dest=bytes.fromhex(recipient.address), amt=amount,
         dest_custom_records=custom_records,
         payment_hash=sha256(preimage).digest(),
         timeout_seconds=10, fee_limit_msat=100000, max_parts=1, final_cltv_delta=144)
 
-    app.logger.info("Sending %s sats to %s. Custom records: %s. Return value: %s" % (amount, address, custom_records, ret))
+    app.logger.info("Sending %s sats to %s. Custom records: %s. Return value: %s" % (amount, recipient.address, custom_records, ret))
 
     # TODO: deal with return value (also see PR https://github.com/kornpow/lnd-grpc-client/pull/3)
     # TODO: raise PaymentFailed for failed payments

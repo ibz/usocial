@@ -69,6 +69,8 @@ def parse_valuespec(root):
             value_recipient['name'] = value_recipient_el.attrib.get('name')
             value_recipient['address_type'] = value_recipient_el.attrib['type']
             value_recipient['address'] = value_recipient_el.attrib['address']
+            value_recipient['custom_key'] = value_recipient_el.attrib.get('customKey')
+            value_recipient['custom_value'] = value_recipient_el.attrib.get('customValue')
             value_recipient['split'] = int(value_recipient_el.attrib['split'])
             value_recipients.append(value_recipient)
 

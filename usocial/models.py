@@ -143,7 +143,11 @@ class Feed(db.Model):
 
             value_spec = ValueSpec(protocol=p_value_spec['protocol'], method=p_value_spec['method'], suggested_amount=p_value_spec['suggested_amount'])
             for p_recipient in p_value_recipients:
-                recipient = ValueRecipient(name=p_recipient['name'], address_type=p_recipient['address_type'], address=p_recipient['address'], split=p_recipient['split'])
+                recipient = ValueRecipient(
+                    name=p_recipient['name'],
+                    address_type=p_recipient['address_type'], address=p_recipient['address'],
+                    custom_key=p_recipient['custom_key'], custom_value=p_recipient['custom_value'],
+                    split=p_recipient['split'])
                 value_spec.recipients.append(recipient)
             self.value_specs.append(value_spec)
 
@@ -257,6 +261,8 @@ class ValueRecipient(db.Model):
     name = db.Column(db.String(100))
     address_type = db.Column(db.String(20), nullable=False)
     address = db.Column(db.String(100), nullable=False)
+    custom_key = db.Column(db.String(100))
+    custom_value = db.Column(db.String(100))
     split = db.Column(db.Integer, nullable=False)
 
 class PaymentError(db.Model):

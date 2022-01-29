@@ -164,7 +164,7 @@ def pay():
             for payment_data in form.data['payments']:
                 recipient = m.ValueRecipient.query.filter_by(id=payment_data['recipient']['id']).first()
                 try:
-                    payments.send_stream_payment(recipient.address, payment_data['amount'], user_items)
+                    payments.send_stream_payment(recipient, payment_data['amount'], user_items)
                     success_count += 1
                 except payments.PaymentFailed as e:
                     app.logger.exception(e)
