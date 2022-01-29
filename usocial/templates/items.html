@@ -43,10 +43,14 @@
 </td><td class="right-panel">
 
 {% if show_player %}
+<table class="fullWidthTable">
+<tr><td>
 <audio id="podcastPlayer" controls>
     <source id="audioSource" src="" type=""></source>
     Your browser does not support the audio tag.
 </audio>
+</td></tr>
+</table>
 {% endif %}
 
 {% if feed %}
