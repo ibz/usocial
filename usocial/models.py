@@ -1,4 +1,5 @@
 from datetime import datetime
+import enum
 import hashlib
 import os
 import os.path
@@ -78,14 +79,6 @@ class Feed(db.Model):
         # get value_spec for the feed (item_id is None)
         value_specs = [s for s in self.value_specs if s.item_id is None]
         return value_specs[0] if value_specs else None
-
-    def karma(self, user):
-        q = db.session.query(UserItem).filter(UserItem.user_id == user.id, UserItem.item_id == Item.id, Item.feed_id == self.id)
-        sum_q = q.statement.with_only_columns([
-            db.func.coalesce(db.func.sum(UserItem.stream_value_played), 0),
-            db.func.coalesce(db.func.sum(UserItem.stream_value_paid), 0)])
-        played_value, paid_value = q.session.execute(sum_q).one()
-        return played_value, paid_value
 
     def update(self, parsed_feed):
         self.fetched_at = datetime.now()
@@ -207,6 +200,11 @@ class Item(db.Model):
     def relative_date(self):
         return format_timedelta(self.updated_at - datetime.now(), add_direction=True)
 
+    @property
+    def value_spec(self):
+        # TODO: check item value specs first, which can override feed value specs
+        return self.feed.value_spec
+
 class UserItem(db.Model):
     __tablename__ = 'user_items'
 
@@ -219,11 +217,6 @@ class UserItem(db.Model):
     play_position = db.Column(db.Integer, nullable=False, default=0)
     stream_value_played = db.Column(db.Integer, nullable=False, default=0)
     stream_value_paid = db.Column(db.Integer, nullable=False, default=0)
-
-    @property
-    def value_spec(self):
-        # TODO: check item value specs first, which can override feed value specs
-        return self.item.feed.value_spec
 
 class ValueSpec(db.Model):
     __tablename__ = 'value_specs'
@@ -267,15 +260,27 @@ class ValueRecipient(db.Model):
     custom_value = db.Column(db.String(100))
     split = db.Column(db.Integer, nullable=False)
 
-class Boost(db.Model):
-    __tablename__ = 'boosts'
+class Action(db.Model):
+    __tablename__ = 'actions'
+
+    class Actions(str, enum.Enum):
+        stream = 'stream'
+        boost = 'boost'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
-    item_id = db.Column(db.Integer, db.ForeignKey(Item.id), nullable=False)
-    ts = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
+    action = db.Column(db.Enum(Actions), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey(Item.id), nullable=True)
+    ts = db.Column(db.Integer, nullable=True)
+    message = db.Column(db.String(100), nullable=True)
+
+    user = db.relationship(User)
+    feed = db.relationship(Feed)
+    item = db.relationship(Item)
+    errors = db.relationship('Error', backref='action')
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -284,15 +289,15 @@ class Boost(db.Model):
         ),
     )
 
-class PaymentError(db.Model):
-    __tablename__ = 'payment_errors'
+class Error(db.Model):
+    __tablename__ = 'errors'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    action_id = db.Column(db.Integer, db.ForeignKey(Action.id))
     address = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
-    item_ids = db.Column(db.String(1000), nullable=False)
+    item_ids = db.Column(db.String(1000), nullable=True)
+    custom_records = db.Column(db.String(1000), nullable=False)
     message = db.Column(db.String(1000), nullable=False)
 
 def create_all():

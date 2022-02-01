@@ -28,7 +28,7 @@ function hasParentWithClass(element, classNames) {
     return element.parentNode && hasParentWithClass(element.parentNode, classNames);
 }
 
-function buildXhr(successCB) {
+function buildXhr(successCB, errorCB) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200)
@@ -36,14 +36,18 @@ function buildXhr(successCB) {
             var resp = JSON.parse(xhr.responseText);
             if (resp.ok) {
                 successCB(resp);
+            } else {
+                if (errorCB) {
+                    errorCB(resp);
+                }
             }
         }
     }
     return xhr;
 }
 
-function doPost(url, data, csrf_token, successCB) {
-    var xhr = buildXhr(successCB);
+function doPost(url, data, csrf_token, successCB, errorCB) {
+    var xhr = buildXhr(successCB, errorCB);
     xhr.open('POST', url);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     var token = getCookie('csrf_access_token');
@@ -78,11 +82,71 @@ function updatePodcastItemPosition(feedId, itemId, position) {
 
 function playedItemValue(feedId, itemId, value) {
     var item = document.getElementById('item-' + itemId);
-    var el_played_minutes = document.getElementById('played-minutes');
+    var el_played_minutes = document.getElementById('stream-value-played');
     var playedMinutes = parseInt(el_played_minutes.innerText);
     el_played_minutes.innerText = (playedMinutes + value).toString();
     doPost(`/feeds/${feedId}/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
         function(_) { });
+}
+
+function sendBoostValue() {
+    var source = document.getElementById('audioSource');
+    var feedId = null, itemId = null;
+    for (const item of document.querySelectorAll(".item")) {
+        if (source.src === item.dataset.enclosure_url) {
+            feedId = item.dataset.feed_id;
+            itemId = item.dataset.id;
+        }
+    }
+    if (itemId) {
+        var player = document.getElementById('podcastPlayer');
+        var ts = parseInt(player.currentTime);
+        var amount = parseInt(document.getElementById('boost-value-amount').value);
+        sendValue(feedId, itemId, 'boost', amount, ts);
+    }
+}
+
+function sendStreamValue(feedId) {
+    var amount = parseInt(document.getElementById('stream-value-amount').value);
+    sendValue(feedId, null, 'stream', amount, null);
+}
+
+function sendValue(feedId, itemId, action, amount, ts) {
+    var player = document.getElementById('podcastPlayer');
+    var postUrl = `/feeds/${feedId}` + (itemId ? `/items/${itemId}` : "") + "/send-value";
+    var params = `action=${action}&amount=${amount}` + (ts ? `&ts=${ts}` : "");
+    doPost(postUrl, params, player.dataset.csrf_token,
+        function(response) {
+            var contributionAmount = document.getElementById(`contribution-amount-${action}`);
+            contributionAmount.innerText = (parseInt(contributionAmount.innerText) + amount).toString();
+
+            if (action === 'stream') {
+                document.getElementById('stream-value-paid').innerText = document.getElementById('stream-value-played').innerText;
+            }
+
+            var feedDetailsBody = document.getElementById('feed-details').getElementsByTagName('tbody')[0];
+            var row = feedDetailsBody.insertRow();
+            row.className = "actionRow";
+            var existingActionsVisible = false;
+            for(const row of document.querySelectorAll('.actionRow')) {
+                if (row.style.display === "table-row") {
+                    existingActionsVisible = true;
+                }
+            }
+            if (!existingActionsVisible) {
+                row.style.display = 'none';
+            }
+            row.insertCell();
+
+            var extra = response.has_errors ? '<i class="fas fa-exclamation" title="has errors"></i>' : "";
+            var d = new Date();
+            var formattedDate = d.toLocaleString('default', { day: 'numeric' }) + " " + d.toLocaleString('default', { month: 'short' }) + " " + d.toLocaleString('default', { year: 'numeric' });
+            var formattedTime = d.toLocaleString('default', { hour12: false, hour: 'numeric', minute: 'numeric' });
+            row.insertCell().innerHTML = `<small>${formattedDate} ${formattedTime}</small> ${extra} ${action} ${amount} sats`;
+        },
+        function(_) {
+            alert("Send failed!");
+        });
 }
 
 function followFeed(feedId, value, csrf_token) {
@@ -155,6 +219,11 @@ function playPodcastItem(feedId, itemId) {
     var item = document.getElementById('item-' + itemId);
     item.classList.add('item-active');
 
+    var boost = document.getElementById('boost-payment');
+    if (boost) {
+        boost.style.display = "table-row";
+    }
+
     var source = document.getElementById('audioSource');
     source.src = item.dataset.enclosure_url;
     source.type = item.dataset.enclosure_type;
@@ -176,6 +245,9 @@ function playPodcastItem(feedId, itemId) {
                 nextItem = i;
                 break;
             }
+        }
+        if (boost) {
+            boost.style.display = "none";
         }
         if (nextItem) {
             playPodcastItem(nextItem.dataset.feed_id, nextItem.dataset.id);
@@ -211,6 +283,19 @@ function feedClick(e, feedId, liked) {
     }
 
     window.location = `/feeds/${feedId ? feedId : "all"}/items` + (liked ? '/liked' : '');
+}
+
+function showStreamPayment() {
+    var streamRow = document.getElementById('stream-payment');
+    streamRow.style.display = streamRow.style.display === "none" ? "table-row" : "none";
+    var paymentAmount = parseInt(document.getElementById('value-spec-amount').innerText) * (parseInt(document.getElementById('stream-value-played').innerText) - parseInt(document.getElementById('stream-value-paid').innerText));
+    document.getElementById('stream-value-amount').value = paymentAmount.toString();
+}
+
+function showActions() {
+    for(const row of document.querySelectorAll('.actionRow')) {
+        row.style.display = row.style.display === "none" ? "table-row" : "none";
+    }
 }
 
 function onBodyLoad() {

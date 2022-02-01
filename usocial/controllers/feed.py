@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from babel.dates import format_timedelta
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
@@ -9,9 +10,9 @@ from urllib.parse import urlparse
 
 import podcastindex
 
-from usocial import forms, models as m
+from usocial import forms, models as m, payments
 from usocial.parser import extract_feed_links, parse_feed
-from usocial.main import db, jwt_required
+from usocial.main import app, db, jwt_required
 
 import config
 
@@ -45,29 +46,52 @@ def get_items_feeds(feed_id, q):
     counts['total'] = sum(counts.values())
     return items, feeds, counts
 
+def get_feed_details(feed_id, items):
+    feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
+    if feed:
+        q = db.session.query(m.UserItem) \
+            .filter(m.UserItem.user_id == current_user.id, m.UserItem.item_id == m.Item.id, m.Item.feed_id == feed.id)
+        sum_q = q.statement.with_only_columns([
+            db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
+            db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
+        played_value, paid_value = q.session.execute(sum_q).one()
+        paid_value_amounts = [(action.value, amount) for action, amount in m.Action.query \
+            .with_entities(m.Action.action, db.func.sum(m.Action.amount)) \
+            .group_by(m.Action.action) \
+            .filter_by(user_id=current_user.id, feed_id=feed.id) \
+            .all()]
+        missing_actions = {a.value for a in m.Action.Actions} - {a for a, _ in paid_value_amounts}
+        for a in missing_actions:
+            paid_value_amounts.append((a, 0))
+        paid_value_amounts.sort()
+    else:
+        played_value, paid_value = 0, 0
+        paid_value_amounts = []
+    show_player = items and all(i[4] for i in items)
+    actions = m.Action.query.filter_by(user_id=current_user.id, feed_id=feed_id).order_by(m.Action.date)
+    return feed, played_value, paid_value, paid_value_amounts, show_player, actions
+
 @feed_blueprint.route('/feeds/all/items', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'])
 @jwt_required
 def items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.read == False)
-    feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
-    played_value, paid_value = feed.karma(current_user) if feed else (0, 0)
-    show_player = items and all(i[4] for i in items)
+    feed, played_value, paid_value, paid_value_amounts, show_player, actions = get_feed_details(feed_id, items)
     return render_template('items.html', feeds=feeds, items=items, counts=counts,
-        feed=feed, played_value=played_value, paid_value=paid_value,
-        show_player=show_player, user=current_user)
+        feed=feed,
+        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
+        show_player=show_player, actions=actions, user=current_user)
 
 @feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'])
 @jwt_required
 def liked_items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.liked == True)
-    feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
-    played_value, paid_value = feed.karma(current_user) if feed else (0, 0)
-    show_player = items and all(i[4] for i in items)
+    feed, played_value, paid_value, paid_value_amounts, show_player, actions = get_feed_details(feed_id, items)
     return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True,
-        feed=feed, played_value=played_value, paid_value=paid_value,
-        show_player=show_player, user=current_user)
+        feed=feed,
+        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
+        show_player=show_player, actions=actions, user=current_user)
 
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
 @jwt_required
@@ -254,3 +278,70 @@ def increment_value_item(feed_id, item_id):
     def update(ui):
         ui.stream_value_played += int(request.form['value'])
     return update_item(item_id, update)
+
+@feed_blueprint.route('/feeds/<int:feed_id>/send-value', methods=['POST'])
+@feed_blueprint.route('/feeds/<int:feed_id>/items/<int:item_id>/send-value', methods=['POST'])
+@jwt_required
+def send_value(feed_id, item_id=None):
+    feed = m.Feed.query.get_or_404(feed_id)
+    user_items = None
+
+    user_item = m.UserItem.query.get_or_404((current_user.id, item_id)) if item_id else None
+
+    item = user_item.item if item_id else None
+    ts = int(request.form['ts']) if 'ts' in request.form else None
+
+    action = request.form['action']
+    total_amount = int(request.form['amount'])
+
+    errors = []
+    success_count = 0
+    for recipient_id, recipient_amount in (item or feed).value_spec.split_amount(total_amount).items():
+        recipient = m.ValueRecipient.query.filter_by(id=recipient_id).first()
+        try:
+            if action == m.Action.Actions.boost.value:
+                tlv = payments.get_podcast_tlv(int(recipient_amount * 1000), current_user, action, feed, item, ts)
+            elif action == m.Action.Actions.stream.value:
+                user_items = list(m.UserItem.query \
+                    .filter(m.UserItem.user == current_user) \
+                    .filter(m.UserItem.item_id == m.Item.id).filter(m.Item.feed_id == feed_id) \
+                    .filter(m.UserItem.stream_value_played > m.UserItem.stream_value_paid).all())
+                total_value_to_pay = sum(i.stream_value_played - i.stream_value_paid for i in user_items)
+                tlvs = []
+                for i in user_items:
+                    amount_ratio = float(i.stream_value_played - i.stream_value_paid) / float(total_value_to_pay)
+                    tlv = payments.get_podcast_tlv(int(recipient_amount * 1000 * amount_ratio), current_user, action, feed, i.item)
+                    tlvs.append(tlv)
+                tlv = tlvs[0] if len(tlvs) == 1 else tlvs
+            else:
+                return "Invalid action.", 400
+
+            payments.send_payment(recipient, recipient_amount, tlv)
+
+            success_count += 1
+        except payments.PaymentFailed as e:
+            app.logger.exception(e)
+            error = m.Error(
+                address=recipient.address, amount=recipient_amount,
+                item_ids=str(item_id or ''), custom_records=json.dumps(e.custom_records),
+                message=str(e))
+            errors.append(error)
+
+    if success_count:
+        if user_items:
+            for user_item in user_items:
+                user_item.stream_value_paid = user_item.stream_value_played
+                db.session.add(user_item)
+        a = m.Action(
+            user=current_user,
+            feed_id=feed_id,
+            action=action,
+            amount=total_amount,
+            item=item,
+            ts=ts,
+            errors=errors)
+        db.session.add(a)
+        db.session.commit()
+        return jsonify(ok=True, has_errors=bool(errors))
+    else:
+        return jsonify(ok=False)

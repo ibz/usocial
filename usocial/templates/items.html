@@ -42,6 +42,63 @@
 </table>
 </td><td class="right-panel">
 
+{% if feed %}
+<h2>{{ feed.title }}</h2>
+<table id="feed-details">
+    {% if feed_value_spec and feed_value_spec.is_supported %}
+    <tr>
+        <td>
+            suggested
+        </td>
+        <td>
+            <span id="value-spec-amount">{{ feed_value_spec.sats_amount }}</span> sats / minute
+        </td>
+    </tr>
+    <tr>
+        <td>
+            streamed
+        </td>
+        <td>
+            <span id="stream-value-played">{{ played_value }}</span>
+            <span id="stream-value-paid" style="display: none;">{{ paid_value }}</span> minutes
+            <a href="" title="contribute" onclick="showStreamPayment(); return false;"><i class="fas fa-bolt"></i>
+        </td>
+    </tr>
+    <tr id="stream-payment" style="display: none">
+        <td></td>
+        <td>
+            <input id="stream-value-amount" type="number" size="4" min="100" step="100" /> sats
+            <button onclick="sendStreamValue({{ feed.id }});">Send</button>
+        </td>
+    </tr>
+    <tr id="boost-payment" style="display: none">
+        <td></td>
+        <td>
+            <input id="boost-value-amount" type="number" size="4" min="100" value="100" step="50" /> sats
+            <button onclick="sendBoostValue();">Boost!</button>
+        </td>
+    </tr>
+    <tr>
+        <td>contributed</td>
+        <td>
+            <a href="" title="show history" onclick="showActions(); return false;"><i class="fas fa-history"></i></a>
+            {% for action_name, amount in paid_value_amounts %}
+                {{ action_name }} <span id="contribution-amount-{{ action_name }}">{{ amount }}</span> sats
+            {% endfor %}
+        </td>
+    </tr>
+    {% for action in actions %}
+        <tr class="actionRow" style="display: none">
+            <td></td>
+            <td>
+                <small>{{ action.date.strftime('%-d %b %Y %-H:%M') }}</small> {% if action.errors %}<i class="fas fa-exclamation" title="has errors"></i>{% endif %} {{ action.action.value }} {{ action.amount }} sats
+            </td>
+        </tr>
+    {% endfor %}
+    {% endif %}
+</table>
+{% endif %}
+
 {% if show_player %}
 <table class="fullWidthTable">
 <tr><td>
@@ -50,16 +107,6 @@
     Your browser does not support the audio tag.
 </audio>
 </td></tr>
-</table>
-{% endif %}
-
-{% if feed %}
-<table class="feed-details">
-    {% if feed_value_spec and feed_value_spec.is_supported %}
-    <tr><td>Contribution</td><td>{{ feed_value_spec.sats_amount }} sats / minute @{{ feed_value_spec.protocol }}</td></tr>
-    <tr><td>Played</td><td><span id="played-minutes">{{ played_value }}</span> minutes</td></tr>
-    <tr><td>Paid</td><td>{{ paid_value }} minutes {% if paid_value < played_value %}<a href="{{ url_for('account.pay') }}?feed_id={{ feed.id }}" title="send payment"><i class="fas fa-bolt"></i></a>{% endif %}</td></tr>
-    {% endif %}
 </table>
 {% endif %}
 

@@ -1,5 +1,5 @@
 a:link, a:visited { color: black; text-decoration: none; }
-body { font-family: Verdana, Geneva, Tahoma, sans-serif; }
+body { font-family: Verdana, Geneva, Tahoma, sans-serif; overflow: scroll; }
 
 .item-liked-1.item-hidden-0 { background-color: #D3DFC1; }
 .item-hidden-1 { background-color: #DAB2BA; }
@@ -28,5 +28,5 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; }
 .fullWidthTable { width: 100%; }
 .item-row:hover, .item-active { background-color: #EBECCD; }
 .feed-row:hover, .feed-active { background-color: #EBECCD; }
-.feed-details { border: 1px solid; width: 100%; }
+#feed-details { border: 1px solid; width: 100%; }
 #podcastPlayer { width: 100%; }

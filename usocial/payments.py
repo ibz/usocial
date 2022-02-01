@@ -15,7 +15,9 @@ PODCAST = 7629169
 APP_NAME = 'usocial'
 
 class PaymentFailed(Exception):
-    pass
+    def __init__(self, custom_records, message):
+        self.custom_records = custom_records
+        super().__init__(message)
 
 def get_lnd_client():
     if not all([config.LND_IP, config.LND_GRPC_PORT, config.LND_DIR]):
@@ -24,36 +26,51 @@ def get_lnd_client():
         macaroon_filepath=os.path.join(config.LND_DIR, "data/chain/bitcoin/mainnet/admin.macaroon"),
         cert_filepath=os.path.join(config.LND_DIR, "tls.cert"))
 
-def send_stream_payment(recipient, amount, user_items):
-    lnd = get_lnd_client()
-    if not lnd:
-        raise PaymentFailed("LND not configured.")
-    preimage = secrets.token_bytes(32)
-    tlv = []
-    for user_item in user_items:
-        tlv.append({
-            'podcast': user_item.item.feed.title,
-            'url': user_item.item.feed.url,
-            'episode': user_item.item.title,
-            'action': 'stream',
-            'value_msat': int(amount * 1000 / len(user_items)), # TODO: improve split
-            'app_name': APP_NAME,
-            'sender_name': user_item.user.username,
-        })
-    if len(tlv) == 1:
-        tlv = tlv[0]
-    custom_records = {KEYSEND_PREIMAGE: preimage}
-    if tlv:
-        custom_records.update({PODCAST: json.dumps(tlv).encode('utf-8')})
+def get_podcast_tlv(value_msat, user, action, feed, item=None, ts=None):
+    tlv = {
+        'value_msat': value_msat,
+        'sender_name': user.username,
+        'action': action,
+        'podcast': feed.title,
+        'url': feed.url,
+        'app_name': APP_NAME,
+    }
+    if item:
+        tlv['episode'] = item.title
+    if ts is not None:
+        tlv['ts'] = ts
+    return tlv
+
+def send_payment(recipient, amount, podcast_tlv):
+    custom_records = {}
+    if podcast_tlv:
+        custom_records[PODCAST] = podcast_tlv
     if recipient.custom_key:
         try:
             custom_key = int(recipient.custom_key)
         except ValueError:
             custom_key = recipient.custom_key
         if custom_key not in custom_records:
-            custom_records.update({custom_key: (recipient.custom_value or "").encode('utf-8')})
+            custom_records[custom_key] = recipient.custom_value or ""
+
+    lnd = get_lnd_client()
+    if not lnd:
+        raise PaymentFailed(custom_records, "LND not configured.")
+
+    encoded_custom_records = {}
+    for k, v in custom_records.items():
+        if isinstance(v, dict) or isinstance(v, list):
+            encoded_custom_records[k] = json.dumps(v).encode('utf-8')
+        elif isinstance(v, str):
+            encoded_custom_records[k] = v.encode('utf-8')
+        else:
+            encoded_custom_records[k] = v
+
+    preimage = secrets.token_bytes(32)
+    encoded_custom_records[KEYSEND_PREIMAGE] = preimage
+
     ret = lnd.send_payment_v2(dest=bytes.fromhex(recipient.address), amt=amount,
-        dest_custom_records=custom_records,
+        dest_custom_records=encoded_custom_records,
         payment_hash=sha256(preimage).digest(),
         timeout_seconds=10, fee_limit_msat=100000, max_parts=1, final_cltv_delta=144)
 
