@@ -246,7 +246,7 @@ class ValueSpec(db.Model):
     def split_amount(self, amount):
         shares = {r.id: r.split for r in self.recipients}
         total_shares = sum(shares.values())
-        return {r_id: amount * (r_shares / total_shares) for r_id, r_shares in shares.items()}
+        return {r_id: int(amount * (r_shares / total_shares)) for r_id, r_shares in shares.items()}
 
 class ValueRecipient(db.Model):
     __tablename__ = 'value_recipients'

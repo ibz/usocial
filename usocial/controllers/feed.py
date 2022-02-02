@@ -300,7 +300,7 @@ def send_value(feed_id, item_id=None):
         recipient = m.ValueRecipient.query.filter_by(id=recipient_id).first()
         try:
             if action == m.Action.Actions.boost.value:
-                tlv = payments.get_podcast_tlv(int(recipient_amount * 1000), current_user, action, feed, item, ts)
+                tlv = payments.get_podcast_tlv(recipient_amount * 1000, current_user, action, feed, item, ts)
             elif action == m.Action.Actions.stream.value:
                 user_items = list(m.UserItem.query \
                     .filter(m.UserItem.user == current_user) \
@@ -309,8 +309,9 @@ def send_value(feed_id, item_id=None):
                 total_value_to_pay = sum(i.stream_value_played - i.stream_value_paid for i in user_items)
                 tlvs = []
                 for i in user_items:
-                    amount_ratio = float(i.stream_value_played - i.stream_value_paid) / float(total_value_to_pay)
-                    tlv = payments.get_podcast_tlv(int(recipient_amount * 1000 * amount_ratio), current_user, action, feed, i.item)
+                    amount_ratio = (i.stream_value_played - i.stream_value_paid) / total_value_to_pay
+                    amount = int(recipient_amount * amount_ratio)
+                    tlv = payments.get_podcast_tlv(amount * 1000, current_user, action, feed, i.item)
                     tlvs.append(tlv)
                 tlv = tlvs[0] if len(tlvs) == 1 else tlvs
             else:
