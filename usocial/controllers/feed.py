@@ -297,19 +297,23 @@ def send_value(feed_id, item_id=None):
     total_amount = int(request.form['amount'])
     total_amount_msat = total_amount * 1000
 
+    if action == m.Action.Actions.stream.value:
+        user_items = list(m.UserItem.query \
+            .filter(m.UserItem.user == current_user) \
+            .filter(m.UserItem.item_id == m.Item.id).filter(m.Item.feed_id == feed_id) \
+            .filter(m.UserItem.stream_value_played > m.UserItem.stream_value_paid).all())
+        total_value_to_pay = sum(i.stream_value_played - i.stream_value_paid for i in user_items)
+
     errors = []
     success_count = 0
+    recipient_amount_sum_msat = 0
     for recipient_id, recipient_amount_msat in (item or feed).value_spec.split_amount(total_amount_msat).items():
+        recipient_amount_sum_msat += recipient_amount_msat
         recipient = m.ValueRecipient.query.filter_by(id=recipient_id).first()
         try:
             if action == m.Action.Actions.boost.value:
                 tlv = payments.get_podcast_tlv(recipient_amount_msat, current_user, action, feed, item, ts)
             elif action == m.Action.Actions.stream.value:
-                user_items = list(m.UserItem.query \
-                    .filter(m.UserItem.user == current_user) \
-                    .filter(m.UserItem.item_id == m.Item.id).filter(m.Item.feed_id == feed_id) \
-                    .filter(m.UserItem.stream_value_played > m.UserItem.stream_value_paid).all())
-                total_value_to_pay = sum(i.stream_value_played - i.stream_value_paid for i in user_items)
                 tlvs = []
                 for i in user_items:
                     amount_ratio = (i.stream_value_played - i.stream_value_paid) / total_value_to_pay
@@ -330,6 +334,9 @@ def send_value(feed_id, item_id=None):
                 item_ids=str(item_id or ''), custom_records=json.dumps(e.custom_records),
                 message=str(e))
             errors.append(error)
+
+    if recipient_amount_sum_msat != total_amount_msat:
+        app.logger.warn("Sum after splitting amongst recipients (%s) does not match original amount (%s)." % (recipient_amount_sum_msat, total_amount_msat))
 
     if success_count:
         if user_items:

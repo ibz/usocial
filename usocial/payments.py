@@ -45,6 +45,9 @@ def send_payment(recipient, amount_msat, podcast_tlv):
     custom_records = {}
     if podcast_tlv:
         custom_records[PODCAST] = podcast_tlv
+        total_tlv_value_msat = sum(t['value_msat'] for t in (podcast_tlv if isinstance(podcast_tlv, list) else [podcast_tlv]))
+        if total_tlv_value_msat != amount_msat:
+            app.logger.warn("Sum of values described in TLV (%s) does not match the actual amount sent (%s)." % (total_tlv_value_msat, amount_msat))
     if recipient.custom_key:
         try:
             custom_key = int(recipient.custom_key)
