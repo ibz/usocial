@@ -21,9 +21,10 @@ feed_blueprint = Blueprint('feed', __name__)
 def get_items_feeds(feed_id, q):
     items = m.UserItem.query \
             .join(m.Item) \
-            .add_columns(m.Item.url, m.Item.title, m.Item.feed_id, m.Item.enclosure_url, m.Item.enclosure_type) \
+            .add_columns(m.Item.url, m.Item.title, m.Item.feed_id, m.Item.updated_at, m.Item.enclosure_url, m.Item.enclosure_type) \
             .filter(m.UserItem.user == current_user) \
-            .filter(q)
+            .filter(q) \
+            .order_by(m.Item.updated_at.desc())
     if feed_id:
         items = items.filter(m.Item.feed_id == feed_id)
     items = list(items) # TODO: optimize this by computing show_player differently
@@ -35,6 +36,7 @@ def get_items_feeds(feed_id, q):
             'id': feed.id,
             'title': feed.title,
             'url': feed.url,
+            'fetched_at': feed.fetched_at,
             'subscribed': 1,
             'active': feed_id == feed.id,
         })

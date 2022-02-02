@@ -22,7 +22,8 @@
     {% for feed in feeds %}
     {% if counts[feed.id] %}
         <tr class="main-row feed-row {% if feed.active %}feed-active {% endif %}"
-            onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;">
+            onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;"
+            title="fetched at {{ feed.fetched_at.strftime('%-d %b %-H:%M') }}">
             <td id="feed-{{ feed.id }}" class="feed-actions feed-followed-1">
                 <span class="unfollow-link">
                     <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i title="unfollow" class="far fa-eye"></i></span>
@@ -111,7 +112,7 @@
 {% endif %}
 
 <table class="items-table">
-    {% for user_item, url, title, feed_id, enclosure_url, enclosure_type in items %}
+    {% for user_item, url, title, feed_id, updated_at, enclosure_url, enclosure_type in items %}
         <tr class="main-row item-row">
             <td id="item-{{ user_item.item_id }}"
                 data-id="{{ user_item.item_id }}"
@@ -141,7 +142,8 @@
                     <span href="" onclick="window.open('{{ url }}', '_blank'); return false;"><i title="open" class="fas fa-external-link-square-alt"></i></span>
                 </span>
                 {{ title }}
-        </td>
+            </td>
+            <td title="{{ updated_at.strftime('%-H:%M') }}">{{ updated_at.strftime('%-d %b %Y') }}</td>
         </tr>
         <tr><td></td></tr>
     {% endfor %}

@@ -26,6 +26,7 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; overflow: scroll; }
 .feed-actions { width: 5%; }
 .items-table { width: 100%; }
 .fullWidthTable { width: 100%; }
+.item-row td:nth-child(2) { text-align: end; }
 .item-row:hover, .item-active { background-color: #EBECCD; }
 .feed-row:hover, .feed-active { background-color: #EBECCD; }
 #feed-details { border: 1px solid; width: 100%; }
