@@ -68,14 +68,14 @@
         <td></td>
         <td>
             <input id="stream-value-amount" type="number" size="4" min="100" step="100" /> sats
-            <button onclick="sendStreamValue({{ feed.id }});">Send</button>
+            <button id="send-stream-value" onclick="sendStreamValue({{ feed.id }});">Send</button>
         </td>
     </tr>
     <tr id="boost-payment" style="display: none">
         <td></td>
         <td>
             <input id="boost-value-amount" type="number" size="4" min="100" value="100" step="50" /> sats
-            <button onclick="sendBoostValue();">Boost!</button>
+            <button id="send-boost-value" onclick="sendBoostValue();">Boost!</button>
         </td>
     </tr>
     <tr>

@@ -102,16 +102,17 @@ function sendBoostValue() {
         var player = document.getElementById('podcastPlayer');
         var ts = parseInt(player.currentTime);
         var amount = parseInt(document.getElementById('boost-value-amount').value);
-        sendValue(feedId, itemId, 'boost', amount, ts);
+        sendValue(feedId, itemId, 'boost', amount, ts, document.getElementById('send-boost-value'));
     }
 }
 
 function sendStreamValue(feedId) {
     var amount = parseInt(document.getElementById('stream-value-amount').value);
-    sendValue(feedId, null, 'stream', amount, null);
+    sendValue(feedId, null, 'stream', amount, null, document.getElementById('send-stream-value'));
 }
 
-function sendValue(feedId, itemId, action, amount, ts) {
+function sendValue(feedId, itemId, action, amount, ts, button) {
+    button.style.display = 'none';
     var player = document.getElementById('podcastPlayer');
     var postUrl = `/feeds/${feedId}` + (itemId ? `/items/${itemId}` : "") + "/send-value";
     var params = `action=${action}&amount=${amount}` + (ts ? `&ts=${ts}` : "");
@@ -143,8 +144,10 @@ function sendValue(feedId, itemId, action, amount, ts) {
             var formattedDate = d.toLocaleString('default', { day: 'numeric' }) + " " + d.toLocaleString('default', { month: 'short' }) + " " + d.toLocaleString('default', { year: 'numeric' });
             var formattedTime = d.toLocaleString('default', { hour12: false, hour: 'numeric', minute: 'numeric' });
             row.insertCell().innerHTML = `<small>${formattedDate} ${formattedTime}</small> ${extra} ${action} ${amount} sats`;
+            button.style.display = 'inline';
         },
         function(_) {
+            button.style.display = 'inline';
             alert("Send failed!");
         });
 }
