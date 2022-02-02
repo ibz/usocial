@@ -4,6 +4,7 @@ import os
 import secrets
 
 from lndgrpc import LNDClient
+from lndgrpc.compiled.lightning_pb2 import Payment, PaymentFailureReason
 
 from usocial.main import app
 
@@ -72,12 +73,22 @@ def send_payment(recipient, amount_msat, podcast_tlv):
     preimage = secrets.token_bytes(32)
     encoded_custom_records[KEYSEND_PREIMAGE] = preimage
 
+    app.logger.info("Sending %s (%s sats) to %s. Custom records: %s." % (amount_msat, amount_msat / 1000, recipient.address, custom_records))
+
     ret = lnd.send_payment_v2(dest=bytes.fromhex(recipient.address), amt_msat=amount_msat,
         dest_custom_records=encoded_custom_records,
         payment_hash=sha256(preimage).digest(),
         timeout_seconds=10, fee_limit_msat=100000, max_parts=1, final_cltv_delta=144)
 
-    app.logger.info("Sending %s (%s sats) to %s. Custom records: %s. Return value: %s." % (amount_msat, amount_msat / 1000, recipient.address, custom_records, ret))
+    app.logger.debug(ret)
 
-    # TODO: deal with return value (also see PR https://github.com/kornpow/lnd-grpc-client/pull/3)
-    # TODO: raise PaymentFailed for failed payments
+    if not ret:
+        raise PaymentFailed(custom_records, "Nothing returned.")
+    has_success = False
+    for r in ret:
+        if r.status == Payment.FAILED:
+            raise PaymentFailed(custom_records, "Payment failed: %s." % PaymentFailureReason.Name(r.failure_reason))
+        if r.status == Payment.SUCCEEDED:
+            has_success = True
+    if not has_success:
+        raise PaymentFailed(custom_records, "No success reported.")
