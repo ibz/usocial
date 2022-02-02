@@ -55,8 +55,10 @@ def get_feed_details(feed_id, items):
             db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
             db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
         played_value, paid_value = q.session.execute(sum_q).one()
-        paid_value_amounts = [(action.value, amount) for action, amount in m.Action.query \
-            .with_entities(m.Action.action, db.func.sum(m.Action.amount)) \
+        paid_value_amounts = [
+            (action.value, amount_msat // 1000) \
+            for action, amount_msat in m.Action.query \
+            .with_entities(m.Action.action, db.func.sum(m.Action.amount_msat)) \
             .group_by(m.Action.action) \
             .filter_by(user_id=current_user.id, feed_id=feed.id) \
             .all()]
@@ -293,14 +295,15 @@ def send_value(feed_id, item_id=None):
 
     action = request.form['action']
     total_amount = int(request.form['amount'])
+    total_amount_msat = total_amount * 1000
 
     errors = []
     success_count = 0
-    for recipient_id, recipient_amount in (item or feed).value_spec.split_amount(total_amount).items():
+    for recipient_id, recipient_amount_msat in (item or feed).value_spec.split_amount(total_amount_msat).items():
         recipient = m.ValueRecipient.query.filter_by(id=recipient_id).first()
         try:
             if action == m.Action.Actions.boost.value:
-                tlv = payments.get_podcast_tlv(recipient_amount * 1000, current_user, action, feed, item, ts)
+                tlv = payments.get_podcast_tlv(recipient_amount_msat, current_user, action, feed, item, ts)
             elif action == m.Action.Actions.stream.value:
                 user_items = list(m.UserItem.query \
                     .filter(m.UserItem.user == current_user) \
@@ -310,20 +313,20 @@ def send_value(feed_id, item_id=None):
                 tlvs = []
                 for i in user_items:
                     amount_ratio = (i.stream_value_played - i.stream_value_paid) / total_value_to_pay
-                    amount = int(recipient_amount * amount_ratio)
-                    tlv = payments.get_podcast_tlv(amount * 1000, current_user, action, feed, i.item)
+                    amount_msat = int(recipient_amount_msat * amount_ratio)
+                    tlv = payments.get_podcast_tlv(amount_msat, current_user, action, feed, i.item)
                     tlvs.append(tlv)
                 tlv = tlvs[0] if len(tlvs) == 1 else tlvs
             else:
                 return "Invalid action.", 400
 
-            payments.send_payment(recipient, recipient_amount, tlv)
+            payments.send_payment(recipient, amount_msat=recipient_amount_msat, podcast_tlv=tlv)
 
             success_count += 1
         except payments.PaymentFailed as e:
             app.logger.exception(e)
             error = m.Error(
-                address=recipient.address, amount=recipient_amount,
+                address=recipient.address, amount_msat=recipient_amount_msat,
                 item_ids=str(item_id or ''), custom_records=json.dumps(e.custom_records),
                 message=str(e))
             errors.append(error)
@@ -337,7 +340,7 @@ def send_value(feed_id, item_id=None):
             user=current_user,
             feed_id=feed_id,
             action=action,
-            amount=total_amount,
+            amount_msat=total_amount_msat,
             item=item,
             ts=ts,
             errors=errors)

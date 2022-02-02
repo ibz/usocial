@@ -41,7 +41,7 @@ def get_podcast_tlv(value_msat, user, action, feed, item=None, ts=None):
         tlv['ts'] = ts
     return tlv
 
-def send_payment(recipient, amount, podcast_tlv):
+def send_payment(recipient, amount_msat, podcast_tlv):
     custom_records = {}
     if podcast_tlv:
         custom_records[PODCAST] = podcast_tlv
@@ -69,12 +69,12 @@ def send_payment(recipient, amount, podcast_tlv):
     preimage = secrets.token_bytes(32)
     encoded_custom_records[KEYSEND_PREIMAGE] = preimage
 
-    ret = lnd.send_payment_v2(dest=bytes.fromhex(recipient.address), amt=amount,
+    ret = lnd.send_payment_v2(dest=bytes.fromhex(recipient.address), amt_msat=amount_msat,
         dest_custom_records=encoded_custom_records,
         payment_hash=sha256(preimage).digest(),
         timeout_seconds=10, fee_limit_msat=100000, max_parts=1, final_cltv_delta=144)
 
-    app.logger.info("Sending %s sats to %s. Custom records: %s. Return value: %s" % (amount, recipient.address, custom_records, ret))
+    app.logger.info("Sending %s (%s sats) to %s. Custom records: %s. Return value: %s." % (amount_msat, amount_msat / 1000, recipient.address, custom_records, ret))
 
     # TODO: deal with return value (also see PR https://github.com/kornpow/lnd-grpc-client/pull/3)
     # TODO: raise PaymentFailed for failed payments
