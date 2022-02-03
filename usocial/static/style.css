@@ -31,3 +31,22 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; overflow: scroll; }
 .feed-row:hover, .feed-active { background-color: #EBECCD; }
 #feed-details { border: 1px solid; width: 100%; }
 #podcastPlayer { width: 100%; }
+
+/***** BEGIN dark mode *****/
+/***** https://ar.al/2021/08/24/implementing-dark-mode-in-a-handful-of-lines-of-css-with-css-filters/ *****/
+@media (prefers-color-scheme: dark) {
+    body { filter: invert(100%) hue-rotate(180deg); }
+
+    /* Firefox workaround: Set the background colour for the html element separately. */
+    html { background-color: #111; }
+
+    /* Do not invert media (revert the invert). */
+    img, video, iframe, audio { filter: invert(100%) hue-rotate(180deg); }
+
+    /* Re-enable code block backgrounds. */
+    pre { filter: invert(6%); }
+
+    /* Improve contrast on list item markers. */
+    li::marker { color: #666; }
+}
+/***** END dark mode *****/
