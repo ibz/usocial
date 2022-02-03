@@ -7,6 +7,10 @@
         <link rel="stylesheet" href="/static/fontawesome/all.css">
         <link rel="stylesheet" href="/static/style.css" />
         <script type="text/javascript" src="/static/utils.js"></script>
+        <script>
+            var csrfToken = '{{ csrf_token() }}'; // {# https://github.com/wtforms/flask-wtf/blob/main/src/flask_wtf/csrf.py #}
+            var userTimezone = '{% if user and user.timezone %}{{ user.timezone }}{% endif %}';
+        </script>
     </head>
     <body onload="onBodyLoad();">
     <center>

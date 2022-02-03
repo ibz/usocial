@@ -32,11 +32,12 @@ def get_items_feeds(feed_id, q):
     for feed in m.Feed.query \
         .join(m.FeedGroup).join(m.Group) \
         .filter(m.Group.user == current_user).all():
+
         feeds.append({
             'id': feed.id,
             'title': feed.title,
             'url': feed.url,
-            'fetched_at': feed.fetched_at,
+            'fetched_at': current_user.localize(feed.fetched_at),
             'fetch_failed': feed.fetch_failed,
             'subscribed': 1,
             'active': feed_id == feed.id,

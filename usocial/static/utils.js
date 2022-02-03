@@ -306,4 +306,9 @@ function onBodyLoad() {
     if (player) {
         player.volume = parseFloat(player.dataset.volume);
     }
+    if (userTimezone === '') {
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        doPost(`/account/timezone`, `value=${tz}`, csrfToken,
+        function(_) { });
+    }
 }

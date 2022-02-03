@@ -3,6 +3,7 @@ import enum
 import hashlib
 import os
 import os.path
+import pytz
 from urllib.parse import urlparse
 
 from babel.dates import format_timedelta
@@ -23,6 +24,7 @@ class User(db.Model):
     registered_on = db.Column(db.DateTime, nullable=False)
     public = db.Column(db.Boolean, nullable=False, default=False)
 
+    timezone = db.Column(db.String(100))
     audio_volume = db.Column(db.Float, nullable=False, default=1.0)
 
     groups = db.relationship('Group', backref='user')
@@ -43,6 +45,12 @@ class User(db.Model):
         if not self.password:
             return False
         return bcrypt.check_password_hash(self.password, password)
+
+    def localize(self, d):
+        if not d:
+            return None
+        else:
+            return pytz.timezone(self.timezone).localize(d) if self.timezone else d
 
 class Group(db.Model):
     __tablename__ = 'groups'

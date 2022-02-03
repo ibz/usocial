@@ -1,3 +1,5 @@
+import pytz
+
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_jwt_extended import create_access_token, create_refresh_token, current_user, get_jwt_identity, set_access_cookies, set_refresh_cookies, unset_jwt_cookies, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
@@ -122,6 +124,17 @@ def logout():
 @jwt_required
 def update_volume():
     current_user.audio_volume = float(request.form['value'])
+    db.session.add(current_user)
+    db.session.commit()
+    return jsonify(ok=True)
+
+@account_blueprint.route('/account/timezone', methods=['POST'])
+@jwt_required
+def update_timezone():
+    try:
+        current_user.timezone = pytz.timezone(request.form['value']).zone
+    except pytz.exceptions.UnknownTimeZoneError:
+        return "Invalid timezone.", 400
     db.session.add(current_user)
     db.session.commit()
     return jsonify(ok=True)
