@@ -22,3 +22,6 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:80.0) Gecko/20100
 LND_IP = os.environ.get("LND_IP")
 LND_GRPC_PORT = os.environ.get("LND_GRPC_PORT")
 LND_DIR = os.environ.get("LND_DIR")
+
+VERSION = 'dev'
+BUILD = '?'

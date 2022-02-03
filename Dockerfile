@@ -1,10 +1,16 @@
 FROM python:3.8-buster
 
+ARG version
+
 RUN apt-get update && apt-get install -y cron sudo
 
 COPY ./usocial /usocial
 COPY requirements.txt /
+
 COPY config.py /
+RUN echo "VERSION = '${version}'" >> /config.py
+RUN echo "BUILD = '"`date +%Y%m%d`"'" >> /config.py
+
 COPY start.sh /
 RUN chmod +x /start.sh
 

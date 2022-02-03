@@ -29,7 +29,7 @@
                     </td>
                     <td style="text-align: right;">
                         {% if user %}
-                            <a href="{{ url_for('account.me') }}">{{ user.username }}</a>
+                            <a href="{{ url_for('account.account') }}"><i title="account" class="fas fa-user-cog"></i></a>
                         {% else %}
                             <a href="{{ url_for('account.register') }}">register</a> |
                             <a href="{{ url_for('account.login') }}">log in</a>

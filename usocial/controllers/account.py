@@ -27,6 +27,19 @@ def index():
             return redirect(url_for('account.login'))
     return redirect(url_for('feed.items'))
 
+@account_blueprint.route('/account', methods=['GET'])
+@jwt_required
+def account():
+    q = db.session.query(m.UserItem).filter_by(user_id=current_user.id)
+    sum_q = q.statement.with_only_columns([
+        db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
+        db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
+    played_value, paid_value = q.session.execute(sum_q).one()
+    paid_value_amounts = m.Action.get_total_amounts(current_user)
+
+    return render_template('account.html', user=current_user, version=config.VERSION, build=config.BUILD,
+        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts)
+
 @account_blueprint.route('/account/register', methods=['GET', 'POST'])
 def register():
     if current_user:
@@ -86,19 +99,6 @@ def login():
         flash("Incorrect username or password.")
         return redirect(url_for('account.login'))
 
-@account_blueprint.route('/account/me', methods=['GET'])
-@jwt_required
-def me():
-    q = db.session.query(m.UserItem).filter_by(user_id=current_user.id)
-    sum_q = q.statement.with_only_columns([
-        db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
-        db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
-    played_value, paid_value = q.session.execute(sum_q).one()
-    paid_value_amounts = m.Action.get_total_amounts(current_user)
-
-    return render_template('me.html', user=current_user,
-        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts)
-
 @account_blueprint.route('/account/password', methods=['GET', 'POST'])
 @jwt_required
 def password():
@@ -114,7 +114,7 @@ def password():
         flash("Your password was changed")
         db.session.add(current_user)
         db.session.commit()
-        return redirect(url_for('account.me'))
+        return redirect(url_for('account.account'))
 
 @account_blueprint.route('/account/logout', methods=['GET'])
 def logout():

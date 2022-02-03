@@ -39,7 +39,7 @@ class User(db.Model):
             self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
         else:
             self.password = None
-        self.fever_api_key = hashlib.md5(("%s:%s" % (username, password or "")).encode('utf-8')).hexdigest()
+        self.fever_api_key = hashlib.md5(("%s:%s" % (self.username, password or "")).encode('utf-8')).hexdigest()
 
     def verify_password(self, password):
         if not self.password:

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Karma</h2>
+<h3>Podcast value</h3>
+<table>
+<tr><td>Total played</td><td>{{ played_value }} minutes</td></tr>
+{% for action_name, amount in paid_value_amounts %}
+<tr><td>Total {{ action_name }}</td><td>{{ amount }} sats</td></tr>
+{% endfor %}
+</table>
+
+<h2>User</h2>
+<table>
+    <tr><td>Username</td><td><strong>{{ user.username }}</strong></td></tr>
+    <tr><td>{% if user.password %}Has{% else %}No{% endif %} password</td><td><a href="{{ url_for('account.password') }}"><i title="set password" class="fas fa-key"></i></a></td></tr>
+    <tr><td>API key</td><td>{{ user.fever_api_key }}</td></tr>
+    <tr><td><a href="{{ url_for('account.logout') }}">log out</a></td></tr>
+</table>
+
+<h2>App</h2>
+<table>
+    <tr><td>Version</td><td>{{ version }}</td></tr>
+    <tr><td>Build</td><td>{{ build }}</td></tr>
+    <tr><td>Website</td><td><a href="http://usocial.me" target="_blank">usocial.me</a></td></tr>
+</table>
+{% endblock %}
