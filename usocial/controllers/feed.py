@@ -44,6 +44,7 @@ def get_items_feeds(feed_id, q):
         feeds.append({
             'id': feed.id,
             'title': feed.title,
+            'is_podcast': feed.is_podcast,
             'url': feed.url,
             'fetched_at': current_user.localize(feed.fetched_at),
             'fetch_failed': feed.fetch_failed,
@@ -71,31 +72,30 @@ def get_feed_details(feed_id, items):
     else:
         played_value, paid_value = 0, 0
         paid_value_amounts = []
-    show_player = items and all(i['enclosure_url'] for i in items)
     actions = m.Action.query.filter_by(user_id=current_user.id, feed_id=feed_id).order_by(m.Action.date)
-    return feed, played_value, paid_value, paid_value_amounts, show_player, actions
+    return feed, played_value, paid_value, paid_value_amounts, actions
 
 @feed_blueprint.route('/feeds/all/items', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'])
 @jwt_required
 def items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.read == False)
-    feed, played_value, paid_value, paid_value_amounts, show_player, actions = get_feed_details(feed_id, items)
+    feed, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
     return render_template('items.html', feeds=feeds, items=items, counts=counts,
         feed=feed,
         played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
-        show_player=show_player, actions=actions, user=current_user)
+        actions=actions, user=current_user)
 
 @feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'])
 @jwt_required
 def liked_items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.liked == True)
-    feed, played_value, paid_value, paid_value_amounts, show_player, actions = get_feed_details(feed_id, items)
+    feed, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
     return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True,
         feed=feed,
         played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
-        show_player=show_player, actions=actions, user=current_user)
+        actions=actions, user=current_user)
 
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
 @jwt_required
@@ -181,7 +181,7 @@ def search_podcasts():
         return render_template('search_podcasts.html', user=current_user,
             form=forms.SearchPodcastForm(), jwt_csrf_token=request.cookies.get('csrf_access_token'))
 
-    q = m.Feed.query.join(m.FeedGroup).join(m.Group).filter(m.Group.user == current_user, m.Group.name == m.Group.PODCASTS_GROUP).all()
+    q = m.Feed.query.join(m.FeedGroup).join(m.Group).filter(m.Group.user == current_user).all()
     subscribed_urls = {f.url for f in q}
     index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
     result = index.search(request.form['keywords'])
@@ -208,7 +208,8 @@ def follow_podcast():
         feed = m.Feed(
             url=request.form['url'],
             homepage_url=request.form['homepage_url'],
-            title=request.form['title'])
+            title=request.form['title'],
+            is_podcast=True)
         db.session.add(feed)
     parsed_feed = parse_feed(feed.url)
     if not parsed_feed:
@@ -221,9 +222,9 @@ def follow_podcast():
     for item in new_items + updated_items:
         db.session.add(item)
     db.session.commit()
-    group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.PODCASTS_GROUP).one_or_none()
+    group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.DEFAULT_GROUP).one_or_none()
     if not group:
-        group = m.Group(user=current_user, name=m.Group.PODCASTS_GROUP)
+        group = m.Group(user=current_user, name=m.Group.DEFAULT_GROUP)
         db.session.add(group)
         db.session.commit()
     db.session.add(m.FeedGroup(group=group, feed_id=feed.id))

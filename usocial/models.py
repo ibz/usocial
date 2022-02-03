@@ -56,7 +56,6 @@ class Group(db.Model):
     __tablename__ = 'groups'
 
     DEFAULT_GROUP = 'Default'
-    PODCASTS_GROUP = 'Podcasts'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
@@ -70,6 +69,7 @@ class Feed(db.Model):
     url = db.Column(db.String(1000), unique=True, nullable=False)
     homepage_url = db.Column(db.String(1000), nullable=False)
     title = db.Column(db.String(1000))
+    is_podcast = db.Column(db.Boolean, nullable=False, default=False)
     updated_at = db.Column(db.DateTime)
     fetched_at = db.Column(db.DateTime)
     fetch_failed = db.Column(db.Boolean, default=False)

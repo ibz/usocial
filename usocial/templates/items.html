@@ -17,6 +17,7 @@
             onclick="feedClick(event, null, {% if liked %}true{% else %}false{% endif %}); return false;">
             All
         </td>
+        <td></td>
         <td>{{ counts['total'] }}</td>
     </tr>
     {% for feed in feeds %}
@@ -33,7 +34,10 @@
                 </span>
             </td>
             <td id="feed-{{ feed.id }}">
-                {{ feed.title }} {% if feed.fetch_failed %}<i class="fas fa-exclamation" title="fetch failed"></i>{% endif %}
+                {{ feed.title }} {% if feed.is_podcast %}<i class="fas fa-podcast"></i>{% else %}<i class="fas fa-blog"></i>{% endif %}
+            </td>
+            <td>
+                {% if feed.fetch_failed %}<i class="fas fa-exclamation" title="fetch failed"></i>{% endif %}
             </td>
             <td>{{ counts[feed.id] }}</td>
         </tr>
@@ -100,7 +104,7 @@
 </table>
 {% endif %}
 
-{% if show_player %}
+{% if feed.is_podcast %}
 <table class="fullWidthTable">
 <tr><td>
 <audio id="podcastPlayer" controls="controls" onvolumechange="podcastPlayerVolumeChanged();" data-volume="{{ user.audio_volume }}">
