@@ -46,18 +46,17 @@ function buildXhr(successCB, errorCB) {
     return xhr;
 }
 
-function doPost(url, data, csrf_token, successCB, errorCB) {
+function doPost(url, data, successCB, errorCB) {
     var xhr = buildXhr(successCB, errorCB);
     xhr.open('POST', url);
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     var token = getCookie('csrf_access_token');
-    xhr.send(`${data}&csrf_token=${csrf_token}&jwt_csrf_token=${token}`);
+    xhr.send(`${data}&csrf_token=${csrfToken}&jwt_csrf_token=${token}`);
     return false;
 }
 
 function likeItem(feedId, itemId, value) {
-    var item = document.getElementById('item-' + itemId);
-    doPost(`/feeds/${feedId}/items/${itemId}/like`, `value=${value}`, item.dataset.csrf_token,
+    doPost(`/feeds/${feedId}/items/${itemId}/like`, `value=${value}`,
         function(_) {
             replaceClass(`item-${itemId}`, `item-liked-${1-value}`, `item-liked-${value}`);
         }
@@ -65,8 +64,7 @@ function likeItem(feedId, itemId, value) {
 }
 
 function hideItem(feedId, itemId, value) {
-    var item = document.getElementById('item-' + itemId);
-    doPost(`/feeds/${feedId}/items/${itemId}/hide`, `value=${value}`, item.dataset.csrf_token,
+    doPost(`/feeds/${feedId}/items/${itemId}/hide`, `value=${value}`,
         function(_) {
             replaceClass(`item-${itemId}`, `item-hidden-${1-value}`, `item-hidden-${value}`);
         }
@@ -74,19 +72,15 @@ function hideItem(feedId, itemId, value) {
 }
 
 function updatePodcastItemPosition(feedId, itemId, position) {
-    var item = document.getElementById('item-' + itemId);
-    item.dataset.play_position = position.toString();
-    doPost(`/feeds/${feedId}/items/${itemId}/position`, `value=${position}`, item.dataset.csrf_token,
-        function(_) { });
+    document.getElementById('item-' + itemId).dataset.play_position = position.toString();
+    doPost(`/feeds/${feedId}/items/${itemId}/position`, `value=${position}`, function(_) { });
 }
 
 function playedItemValue(feedId, itemId, value) {
-    var item = document.getElementById('item-' + itemId);
     var el_played_minutes = document.getElementById('stream-value-played');
     var playedMinutes = parseInt(el_played_minutes.innerText);
     el_played_minutes.innerText = (playedMinutes + value).toString();
-    doPost(`/feeds/${feedId}/items/${itemId}/played-value`, `value=${value}`, item.dataset.csrf_token,
-        function(_) { });
+    doPost(`/feeds/${feedId}/items/${itemId}/played-value`, `value=${value}`, function(_) { });
 }
 
 function sendBoostValue() {
@@ -116,7 +110,7 @@ function sendValue(feedId, itemId, action, amount, ts, button) {
     var player = document.getElementById('podcastPlayer');
     var postUrl = `/feeds/${feedId}` + (itemId ? `/items/${itemId}` : "") + "/send-value";
     var params = `action=${action}&amount=${amount}` + (ts ? `&ts=${ts}` : "");
-    doPost(postUrl, params, player.dataset.csrf_token,
+    doPost(postUrl, params,
         function(response) {
             var contributionAmount = document.getElementById(`contribution-amount-${action}`);
             contributionAmount.innerText = (parseInt(contributionAmount.innerText) + amount).toString();
@@ -152,21 +146,21 @@ function sendValue(feedId, itemId, action, amount, ts, button) {
         });
 }
 
-function followFeed(feedId, value, csrf_token) {
-    doPost(`/feeds/${feedId}/follow`, `value=${value}`, csrf_token,
+function followFeed(feedId, value) {
+    doPost(`/feeds/${feedId}/follow`, `value=${value}`,
         function(_) {
             replaceClass(`feed-${feedId}`, `feed-followed-${1-value}`, `feed-followed-${value}`);
         }
     );
 }
 
-function followPodcast(podcastindex_id, url, homepage_url, title, csrf_token) {
+function followPodcast(podcastindex_id, url, homepage_url, title) {
     var followLink = document.querySelector(`#podcast-${podcastindex_id} .follow-link span`);
     var oldContent = followLink.innerHTML;
     var oldCB = followLink.onclick;
     followLink.textContent = "...";
     followLink.onclick = function() { return false; };
-    doPost("/feeds/podcasts/follow", `url=${url}&homepage_url=${homepage_url}&title=${title}`, csrf_token,
+    doPost("/feeds/podcasts/follow", `url=${url}&homepage_url=${homepage_url}&title=${title}`,
         function(_) {
             replaceClass(`podcast-${podcastindex_id}`, `feed-followed-0`, `feed-followed-1`);
             followLink.onclick = oldCB;
@@ -175,13 +169,13 @@ function followPodcast(podcastindex_id, url, homepage_url, title, csrf_token) {
     );
 }
 
-function unfollowPodcast(podcastindex_id, url, csrf_token) {
+function unfollowPodcast(podcastindex_id, url) {
     var unfollowLink = document.querySelector(`#podcast-${podcastindex_id} .unfollow-link span`);
     var oldContent = unfollowLink.innerHTML;
     var oldCB = unfollowLink.onclick;
     unfollowLink.textContent = "...";
     unfollowLink.onclick = function() { return false; };
-    doPost("/feeds/podcasts/unfollow", `url=${url}`, csrf_token,
+    doPost("/feeds/podcasts/unfollow", `url=${url}`,
         function(_) {
             replaceClass(`podcast-${podcastindex_id}`, `feed-followed-1`, `feed-followed-0`);
             unfollowLink.onclick = oldCB;
@@ -240,7 +234,7 @@ function playPodcastItem(feedId, itemId) {
         var nextItem = null;
         for (const i of document.querySelectorAll('.item')) {
             if (parseInt(i.dataset.id) === itemId) {
-                hideItem(feedId, itemId, 1, i.dataset.csrf_token);
+                hideItem(feedId, itemId, 1);
                 currItem = i;
                 continue;
             }
@@ -265,8 +259,7 @@ function playPodcastItem(feedId, itemId) {
 
 function podcastPlayerVolumeChanged() {
     var player = document.getElementById('podcastPlayer');
-    doPost(`/account/volume`, `value=${player.volume}`, player.dataset.csrf_token,
-        function(_) { });
+    doPost(`/account/volume`, `value=${player.volume}`, function(_) { });
 }
 
 function itemClick(e, feedId, itemId) {
@@ -308,7 +301,6 @@ function onBodyLoad() {
     }
     if (userTimezone === '') {
         var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        doPost(`/account/timezone`, `value=${tz}`, csrfToken,
-        function(_) { });
+        doPost(`/account/timezone`, `value=${tz}`, function(_) { });
     }
 }

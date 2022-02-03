@@ -26,10 +26,10 @@
             title="fetched at {{ feed.fetched_at.strftime('%-d %b %-H:%M') }}">
             <td id="feed-{{ feed.id }}" class="feed-actions feed-followed-1">
                 <span class="unfollow-link">
-                    <span onclick="followFeed({{ feed.id }}, 0, '{{ csrf_token() }}'); return false;" href=""><i title="unfollow" class="far fa-eye"></i></span>
+                    <span onclick="followFeed({{ feed.id }}, 0); return false;" href=""><i title="unfollow" class="far fa-eye"></i></span>
                 </span>
                 <span class="follow-link">
-                    <span onclick="followFeed({{ feed.id }}, 1, '{{ csrf_token() }}'); return false;" href=""><i title="follow" class="far fa-eye-slash"></i></span>
+                    <span onclick="followFeed({{ feed.id }}, 1); return false;" href=""><i title="follow" class="far fa-eye-slash"></i></span>
                 </span>
             </td>
             <td id="feed-{{ feed.id }}">
@@ -103,7 +103,7 @@
 {% if show_player %}
 <table class="fullWidthTable">
 <tr><td>
-<audio id="podcastPlayer" controls="controls" onvolumechange="podcastPlayerVolumeChanged();" data-csrf_token="{{ csrf_token() }}" data-volume="{{ user.audio_volume }}">
+<audio id="podcastPlayer" controls="controls" onvolumechange="podcastPlayerVolumeChanged();" data-volume="{{ user.audio_volume }}">
     <source id="audioSource" src="" type=""></source>
     Your browser does not support the audio tag.
 </audio>
@@ -120,7 +120,6 @@
                 data-enclosure_url="{{ enclosure_url }}"
                 data-enclosure_type="{{ enclosure_type }}"
                 data-play_position="{{ user_item.play_position }}"
-                data-csrf_token="{{ csrf_token() }}"
                 {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
                 class="item {% if enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
                 onclick="itemClick(event, {{ feed_id }}, {{ user_item.item_id }}); return false;">
