@@ -67,17 +67,7 @@ def get_feed_details(feed_id, items):
             db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
             db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
         played_value, paid_value = q.session.execute(sum_q).one()
-        paid_value_amounts = [
-            (action.value, amount_msat // 1000) \
-            for action, amount_msat in m.Action.query \
-            .with_entities(m.Action.action, db.func.sum(m.Action.amount_msat)) \
-            .group_by(m.Action.action) \
-            .filter_by(user_id=current_user.id, feed_id=feed.id) \
-            .all()]
-        missing_actions = {a.value for a in m.Action.Actions} - {a for a, _ in paid_value_amounts}
-        for a in missing_actions:
-            paid_value_amounts.append((a, 0))
-        paid_value_amounts.sort()
+        paid_value_amounts = m.Action.get_total_amounts(current_user, feed_id)
     else:
         played_value, paid_value = 0, 0
         paid_value_amounts = []

@@ -297,6 +297,21 @@ class Action(db.Model):
         ),
     )
 
+    @classmethod
+    def get_total_amounts(cls, user, feed_id=None):
+        q = Action.query \
+            .with_entities(Action.action, db.func.sum(Action.amount_msat)) \
+            .group_by(Action.action) \
+            .filter_by(user_id=user.id)
+        if feed_id:
+            q = q.filter_by(feed_id=feed_id)
+        total_amounts = [(a.value, amount_msat // 1000) for a, amount_msat in q.all()]
+        missing_actions = {a.value for a in Action.Actions} - {a for a, _ in total_amounts}
+        for a in missing_actions:
+            total_amounts.append((a, 0))
+        total_amounts.sort()
+        return total_amounts
+
 class Error(db.Model):
     __tablename__ = 'errors'
 

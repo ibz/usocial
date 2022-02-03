@@ -92,7 +92,7 @@
         <tr class="actionRow" style="display: none">
             <td></td>
             <td>
-                <small>{{ action.date.strftime('%-d %b %Y %-H:%M') }}</small> {% if action.errors %}<i class="fas fa-exclamation" title="has errors"></i>{% endif %} {{ action.action.value }} {{ action.amount }} sats
+                <small>{{ action.date.strftime('%-d %b %Y %-H:%M') }}</small> {% if action.errors %}<i class="fas fa-exclamation" title="has errors"></i>{% endif %} {{ action.action.value }} {{ action.amount_msat // 1000 }} sats
             </td>
         </tr>
     {% endfor %}

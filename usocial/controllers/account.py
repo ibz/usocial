@@ -94,8 +94,10 @@ def me():
         db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
         db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
     played_value, paid_value = q.session.execute(sum_q).one()
+    paid_value_amounts = m.Action.get_total_amounts(current_user)
 
-    return render_template('me.html', user=current_user, played_value=played_value, paid_value=paid_value)
+    return render_template('me.html', user=current_user,
+        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts)
 
 @account_blueprint.route('/account/password', methods=['GET', 'POST'])
 @jwt_required

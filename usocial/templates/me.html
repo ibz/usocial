@@ -3,8 +3,10 @@
 <h2>Karma</h2>
 <h3>Podcast value</h3>
 <table>
-<tr><td>Played</td><td>{{ played_value }}</td></tr>
-<tr><td>Paid</td><td>{{ paid_value }}</td></tr>
+<tr><td>Total played</td><td>{{ played_value }} minutes</td></tr>
+{% for action_name, amount in paid_value_amounts %}
+<tr><td>Total {{ action_name }}</td><td>{{ amount }} sats</td></tr>
+{% endfor %}
 </table>
 
 <h2>Account</h2>
