@@ -37,6 +37,7 @@ def get_items_feeds(feed_id, q):
             'title': feed.title,
             'url': feed.url,
             'fetched_at': feed.fetched_at,
+            'fetch_failed': feed.fetch_failed,
             'subscribed': 1,
             'active': feed_id == feed.id,
         })

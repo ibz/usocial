@@ -33,7 +33,7 @@
                 </span>
             </td>
             <td id="feed-{{ feed.id }}">
-                {{ feed.title }}
+                {{ feed.title }} {% if feed.fetch_failed %}<i class="fas fa-exclamation" title="fetch failed"></i>{% endif %}
             </td>
             <td>{{ counts[feed.id] }}</td>
         </tr>
