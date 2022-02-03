@@ -1,5 +1,7 @@
 FROM python:3.8-buster
 
+RUN apt-get update && apt-get install -y cron sudo
+
 COPY ./usocial /usocial
 COPY requirements.txt /
 COPY config.py /
@@ -14,6 +16,9 @@ ENV INSTANCE_PATH=/instance
 VOLUME ["/instance"]
 
 RUN groupadd -r usocial --gid=1000 && useradd -r -g usocial --uid=1000 --create-home --shell /bin/bash usocial
+
+RUN touch /var/log/cron.log && chown usocial:usocial /var/log/cron.log
+RUN echo 'usocial ALL=NOPASSWD: /usr/sbin/cron' >> /etc/sudoers
 
 USER usocial
 

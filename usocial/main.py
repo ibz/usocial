@@ -59,6 +59,31 @@ def create_db():
     from usocial import models
     models.create_all()
 
+@app.cli.command("fetch-feeds")
+@with_appcontext
+def fetch_feeds():
+    from usocial import models
+    from usocial.parser import parse_feed
+    for feed in models.Feed.query.all():
+        parsed_feed = parse_feed(feed.url)
+        feed.update(parsed_feed)
+        new_items_count = 0
+        users_count = 0
+        if parsed_feed:
+            new_items, updated_items = feed.update_items(parsed_feed)
+            for item in new_items + updated_items:
+                db.session.add(item)
+            if new_items:
+                new_items_count = len(new_items)
+                for user in models.User.query.join(models.Group).join(models.FeedGroup).join(models.Feed).filter(models.FeedGroup.feed == feed):
+                    users_count += 1
+                    for item in new_items:
+                        db.session.add(models.UserItem(user=user, item=item))
+        db.session.add(feed)
+        db.session.commit()
+
+        app.logger.info(f"Feed fetched: {feed.url}. New items: {new_items_count}. Affected users: {users_count}.")
+
 @jwt.token_verification_failed_loader
 def no_jwt():
     return redirect(url_for('account.login'))
