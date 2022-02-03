@@ -27,7 +27,15 @@ def get_items_feeds(feed_id, q):
             .order_by(m.Item.updated_at.desc())
     if feed_id:
         items = items.filter(m.Item.feed_id == feed_id)
-    items = list(items) # TODO: optimize this by computing show_player differently
+    items = [{
+        'user_item': i[0],
+        'url': i[1],
+        'title': i[2],
+        'feed_id': i[3],
+        'updated_at': i[4],
+        'enclosure_url': i[5],
+        'enclosure_type': i[6]}
+        for i in items]
     feeds = []
     for feed in m.Feed.query \
         .join(m.FeedGroup).join(m.Group) \
@@ -73,7 +81,7 @@ def get_feed_details(feed_id, items):
     else:
         played_value, paid_value = 0, 0
         paid_value_amounts = []
-    show_player = items and all(i[4] for i in items)
+    show_player = items and all(i['enclosure_url'] for i in items)
     actions = m.Action.query.filter_by(user_id=current_user.id, feed_id=feed_id).order_by(m.Action.date)
     return feed, played_value, paid_value, paid_value_amounts, show_player, actions
 

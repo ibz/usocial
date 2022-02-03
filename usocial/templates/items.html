@@ -112,37 +112,37 @@
 {% endif %}
 
 <table class="items-table">
-    {% for user_item, url, title, feed_id, updated_at, enclosure_url, enclosure_type in items %}
+    {% for i in items %}
         <tr class="main-row item-row">
-            <td id="item-{{ user_item.item_id }}"
-                data-id="{{ user_item.item_id }}"
-                data-feed_id="{{ feed_id }}"
-                data-enclosure_url="{{ enclosure_url }}"
-                data-enclosure_type="{{ enclosure_type }}"
-                data-play_position="{{ user_item.play_position }}"
+            <td id="item-{{ i.user_item.item_id }}"
+                data-id="{{ i.user_item.item_id }}"
+                data-feed_id="{{ i.feed_id }}"
+                data-enclosure_url="{{ i.enclosure_url }}"
+                data-enclosure_type="{{ i.enclosure_type }}"
+                data-play_position="{{ i.user_item.play_position }}"
                 {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
-                class="item {% if enclosure_url %}podcast {% endif %}item-liked-{% if user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if user_item.read %}1{% else %}0{% endif %}"
-                onclick="itemClick(event, {{ feed_id }}, {{ user_item.item_id }}); return false;">
+                class="item {% if i.enclosure_url %}podcast {% endif %}item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
+                onclick="itemClick(event, {{ i.feed_id }}, {{ i.user_item.item_id }}); return false;">
                 <span class="unlike-link">
-                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i title="unlike" class="fas fa-heart" style="font-weight: solid;"></i></span>
+                    <span onclick="likeItem({{ i.feed_id }}, {{ i.user_item.item_id }}, 0); return false;" href=""><i title="unlike" class="fas fa-heart" style="font-weight: solid;"></i></span>
                 </span>
                 <span class="like-link">
-                    <span onclick="likeItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i title="like" class="far fa-heart" style="font-weight: regular;"></i></span>
+                    <span onclick="likeItem({{ i.feed_id }}, {{ i.user_item.item_id }}, 1); return false;" href=""><i title="like" class="far fa-heart" style="font-weight: regular;"></i></span>
                 </span>
                 {% if not liked %}
                 <span class="unhide-link">
-                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 0); return false;" href=""><i title="undelete" class="fas fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ i.feed_id }}, {{ i.user_item.item_id }}, 0); return false;" href=""><i title="undelete" class="fas fa-trash-alt"></i></span>
                 </span>
                 <span class="hide-link">
-                    <span onclick="hideItem({{ feed_id }}, {{ user_item.item_id }}, 1); return false;" href=""><i title="delete" class="far fa-trash-alt"></i></span>
+                    <span onclick="hideItem({{ i.feed_id }}, {{ i.user_item.item_id }}, 1); return false;" href=""><i title="delete" class="far fa-trash-alt"></i></span>
                 </span>
                 {% endif %}
                 <span class="open-link">
-                    <span href="" onclick="window.open('{{ url }}', '_blank'); return false;"><i title="open" class="fas fa-external-link-square-alt"></i></span>
+                    <span href="" onclick="window.open('{{ i.url }}', '_blank'); return false;"><i title="open" class="fas fa-external-link-square-alt"></i></span>
                 </span>
-                {{ title }}
+                {{ i.title }}
             </td>
-            <td title="{{ updated_at.strftime('%-H:%M') }}">{{ updated_at.strftime('%-d %b %Y') }}</td>
+            <td title="{{ i.updated_at.strftime('%-d %b %Y %-H:%M') }}"><nobr>{{ i.updated_at.strftime('%-d %b') }}</nobr></td>
         </tr>
         <tr><td></td></tr>
     {% endfor %}
