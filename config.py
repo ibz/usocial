@@ -23,5 +23,7 @@ LND_IP = os.environ.get("LND_IP")
 LND_GRPC_PORT = os.environ.get("LND_GRPC_PORT")
 LND_DIR = os.environ.get("LND_DIR")
 
+DEFAULT_USER_PASSWORD = os.environ.get("DEFAULT_USER_PASSWORD")
+
 VERSION = 'dev'
 BUILD = '?'

@@ -12,6 +12,7 @@ services:
       - ${APP_DATA_DIR}/data:/instance
     environment:
         USOCIAL_JOB: "WEB"
+        APP_PASSWORD: "${APP_PASSWORD}"
         LND_IP: "${LND_IP}"
         LND_GRPC_PORT: ${LND_GRPC_PORT}
         LND_DIR: "/lnd"

@@ -7,7 +7,7 @@ setup_web () {
         echo "SECRET_KEY = '"`python -c 'import os;print(os.urandom(12).hex())'`"'" > /instance/config.py
     fi
     if [ ! -f /instance/usocial.db ]; then
-        FLASK_APP=main flask create-db
+        FLASK_APP=main DEFAULT_USER_PASSWORD=${APP_PASSWORD} flask create-db
     fi
 }
 

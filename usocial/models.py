@@ -11,6 +11,7 @@ from babel.dates import format_timedelta
 from usocial.main import app, db, bcrypt
 from usocial.parser import strip_protocol
 
+import config
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -36,7 +37,7 @@ class User(db.Model):
 
     def set_password(self, password):
         if password:
-            self.password = bcrypt.generate_password_hash(password, app.config.get('BCRYPT_LOG_ROUNDS')).decode()
+            self.password = bcrypt.generate_password_hash(password, config.BCRYPT_LOG_ROUNDS).decode()
         else:
             self.password = None
         self.fever_api_key = hashlib.md5(("%s:%s" % (self.username, password or "")).encode('utf-8')).hexdigest()
@@ -326,6 +327,10 @@ class Error(db.Model):
 def create_all():
     db.create_all()
 
-    # create the default user here
-    db.session.add(User(User.DEFAULT_USERNAME))
+    app.logger.info("Creating the default user.")
+    default_user = User(User.DEFAULT_USERNAME)
+    if config.DEFAULT_USER_PASSWORD:
+        app.logger.info("Setting password for the default user.")
+        default_user.set_password(config.DEFAULT_USER_PASSWORD)
+    db.session.add(default_user)
     db.session.commit()
