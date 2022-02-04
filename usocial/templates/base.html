@@ -11,6 +11,7 @@
         <script type="text/javascript" src="/static/utils.js"></script>
         <script>
             var csrfToken = '{{ csrf_token() }}'; // {# https://github.com/wtforms/flask-wtf/blob/main/src/flask_wtf/csrf.py #}
+            var username = '{% if user %}{{ user.username }}{% endif %}';
             var userTimezone = '{% if user and user.timezone %}{{ user.timezone }}{% endif %}';
         </script>
     </head>
@@ -25,14 +26,13 @@
                         {% if user %}
                             <a href="{{ url_for('feed.items') }}"><i title="my feeds" class="fas fa-rss"></i></a> |
                             <a href="{{ url_for('feed.liked_items') }}"><i title="my liked items" class="fas fa-heart"></i></a>
+                        {% else %}
+                            Welcome to <strong>usocial</strong>. Please log in to continue.
                         {% endif %}
                     </td>
                     <td style="text-align: right;">
                         {% if user %}
                             <a href="{{ url_for('account.account') }}"><i title="account" class="fas fa-user-cog"></i></a>
-                        {% else %}
-                            <a href="{{ url_for('account.register') }}">register</a> |
-                            <a href="{{ url_for('account.login') }}">log in</a>
                         {% endif %}
                     </td>
                     </tr>
@@ -55,7 +55,6 @@
         <tr class="content">
             <td>
             {% block content %}{% endblock %}
-            <hr />
             </td>
         </tr>
     </table>

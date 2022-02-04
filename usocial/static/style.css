@@ -29,6 +29,8 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; overflow: scroll; }
 .item-row td:nth-child(2) { text-align: end; }
 .item-row:hover, .item-active { background-color: #EBECCD; }
 .feed-row:hover, .feed-active { background-color: #EBECCD; }
+.form-row td:nth-child(1) { text-align: end; }
+.form-row td:nth-child(2) { text-align: left; }
 #feed-details { border: 1px solid; width: 100%; }
 #podcastPlayer { width: 100%; }
 

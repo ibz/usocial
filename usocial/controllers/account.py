@@ -12,20 +12,28 @@ import config
 
 account_blueprint = Blueprint('account', __name__)
 
+def login_success(user):
+    response = redirect(url_for('feed.items'))
+    set_access_cookies(response, create_access_token(identity=user.username))
+    set_refresh_cookies(response, create_refresh_token(identity=user.username))
+    return response
+
+def only_default_user():
+    if m.User.query.count() == 1:
+        return m.User.query.filter_by(username=m.User.DEFAULT_USERNAME).one_or_none()
+
+def login_default_user():
+    default_user = only_default_user()
+    if default_user and not default_user.password:
+        return login_success(default_user)
+
 @account_blueprint.route('/', methods=['GET'])
 def index():
     try:
         verify_jwt_in_request()
+        return redirect(url_for('feed.items'))
     except NoAuthorizationError:
-        default_user = m.User.query.filter_by(id=config.DEFAULT_USER_ID).first()
-        if default_user and not default_user.password:
-            response = redirect(url_for('feed.items'))
-            set_access_cookies(response, create_access_token(identity=default_user.username))
-            set_refresh_cookies(response, create_refresh_token(identity=default_user.username))
-            return response
-        else:
-            return redirect(url_for('account.login'))
-    return redirect(url_for('feed.items'))
+        return login_default_user() or redirect(url_for('account.login'))
 
 @account_blueprint.route('/account', methods=['GET'])
 @jwt_required
@@ -37,66 +45,36 @@ def account():
     played_value, paid_value = q.session.execute(sum_q).one()
     paid_value_amounts = m.Action.get_total_amounts(current_user)
 
-    return render_template('account.html', user=current_user, version=config.VERSION, build=config.BUILD,
-        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts)
-
-@account_blueprint.route('/account/register', methods=['GET', 'POST'])
-def register():
-    if current_user:
-        return redirect(url_for('feed.items'))
-
-    if request.method == 'GET':
-        return render_template('register.html', form=forms.RegisterForm())
-
-    error = None
-    username = request.form['username']
-    if not username:
-        error = "Username is required"
-    elif m.User.query.filter_by(username=username).first():
-        error = "Username is already in use"
-    if error is None:
-        try:
-            db.session.add(m.User(username))
-            db.session.commit()
-        except Exception as e:
-            app.log_exception(e)
-            error = "Failed to create user"
-
-    if error is None:
-        return redirect(url_for('account.login'))
-    else:
-        flash(error)
-        return redirect(url_for('account.register'))
+    return render_template('account.html', user=current_user,
+        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
+        version=config.VERSION, build=config.BUILD,
+        only_default_user=only_default_user())
 
 @account_blueprint.route('/account/login', methods=['GET', 'POST'])
 def login():
-    if current_user:
-        return redirect(url_for('feed.items'))
-
     if request.method == 'GET':
-        return render_template('login.html', user=None, form=forms.LoginForm())
+        if current_user:
+            return redirect(url_for('feed.items'))
+        else:
+            return login_default_user() or render_template('login.html', user=None, skip_username=bool(only_default_user()), form=forms.LoginForm())
 
-    username = request.form['username']
+    username = request.form['username'] if not only_default_user() else m.User.DEFAULT_USERNAME
     password = request.form['password']
     user = m.User.query.filter_by(username=username).first()
-    login_success = False
+    success = False
     if not user:
         app.logger.info("User not found: %s", username)
     else:
-        if not user.password:
+        if not user.password and not password:
             app.logger.info("Login success no auth: %s", username)
-            login_success = True
+            success = True
         if user.verify_password(password):
             app.logger.info("Login success password: %s", username)
-            login_success = True
-
-    if login_success:
-        response = redirect(url_for('feed.items'))
-        set_access_cookies(response, create_access_token(identity=user.username))
-        set_refresh_cookies(response, create_refresh_token(identity=user.username))
-        return response
+            success = True
+    if success:
+        return login_success(user)
     else:
-        flash("Incorrect username or password.")
+        flash("Incorrect credentials.")
         return redirect(url_for('account.login'))
 
 @account_blueprint.route('/account/password', methods=['GET', 'POST'])
@@ -118,7 +96,7 @@ def password():
 
 @account_blueprint.route('/account/logout', methods=['GET'])
 def logout():
-    response = redirect(url_for('feed.items'))
+    response = redirect(url_for('account.login'))
     unset_jwt_cookies(response)
     return response
 

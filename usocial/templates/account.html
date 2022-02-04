@@ -9,12 +9,13 @@
 {% endfor %}
 </table>
 
-<h2>User</h2>
+<h2>Account</h2>
 <table>
-    <tr><td>Username</td><td><strong>{{ user.username }}</strong></td></tr>
-    <tr><td>{% if user.password %}Has{% else %}No{% endif %} password</td><td><a href="{{ url_for('account.password') }}"><i title="set password" class="fas fa-key"></i></a></td></tr>
+    <tr><td><strong title="username">{{ user.username }}</strong> {% if user.password %}<i title="password protected" class="fas fa-key"></i>{% else %}<i title="no password" class="fas fa-unlock"></i>{% endif %}</td><td><a href="{{ url_for('account.password') }}">set password</a></td></tr>
     <tr><td>API key</td><td>{{ user.fever_api_key }}</td></tr>
+    {% if not (only_default_user and not user.password) %}
     <tr><td><a href="{{ url_for('account.logout') }}">log out</a></td></tr>
+    {% endif %}
 </table>
 
 <h2>App</h2>

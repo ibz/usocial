@@ -13,8 +13,6 @@ JWT_ACCESS_CSRF_FIELD_NAME = 'jwt_csrf_token'
 PODCASTINDEX_API_KEY = 'ZBJFW42QYWT6C8PWB7EZ'
 PODCASTINDEX_API_SECRET = 'dyHyKXSpJjn4J4rXYpj^DPsWNLjJ2j#VjJ38st9Q'
 
-DEFAULT_USER_ID = 1
-
 SQLALCHEMY_DATABASE_URI = 'sqlite:///../instance/usocial.db'
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:80.0) Gecko/20100101 Firefox/80.0"

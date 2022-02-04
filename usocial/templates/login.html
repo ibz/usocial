@@ -2,16 +2,18 @@
 {% block content %}
     <form method="POST">
         {{ form.hidden_tag() }}
-        <table>
-        <tr>
+        <table class="fullWidthTable" style="padding-top: 10%;">
+        {% if not skip_username %}
+        <tr class="form-row">
             <td>{{ form.username.label }}</td>
             <td>{{ form.username }}</td>
         </tr>
-        <tr>
+        {% endif %}
+        <tr class="form-row">
             <td>{{ form.password.label }}</td>
             <td>{{ form.password }}</td>
         </tr>
-        <tr>
+        <tr class="form-row">
             <td></td>
             <td><button type="submit">Log in</button></td>
         </tr>

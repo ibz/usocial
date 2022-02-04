@@ -1,5 +1,8 @@
 from functools import wraps
 import os
+import sys
+
+import click
 from flask import Flask, redirect, url_for
 from flask.cli import with_appcontext
 from flask_bcrypt import Bcrypt
@@ -7,6 +10,7 @@ from flask_cors import CORS
 from flask_jwt_extended import create_access_token, JWTManager, set_access_cookies, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from flask_wtf.csrf import CSRFProtect
 
 from logging.config import dictConfig
@@ -56,8 +60,20 @@ jwt = JWTManager(app)
 @app.cli.command("create-db")
 @with_appcontext
 def create_db():
-    from usocial import models
-    models.create_all()
+    from usocial import models as m
+    m.create_all()
+
+@app.cli.command("create-user")
+@click.argument("username")
+@with_appcontext
+def create_user(username):
+    try:
+        from usocial import models as m
+        db.session.add(m.User(username))
+        db.session.commit()
+    except IntegrityError:
+        print("User already exists.")
+        sys.exit(1)
 
 @app.cli.command("fetch-feeds")
 @with_appcontext
