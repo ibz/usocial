@@ -33,7 +33,7 @@ class User(db.Model):
     def __init__(self, username):
         self.username = username
         self.fever_api_key = hashlib.md5(("%s:" % username).encode('utf-8')).hexdigest()
-        self.registered_on = datetime.now()
+        self.registered_on = datetime.utcnow()
 
     def set_password(self, password):
         if password:
@@ -51,7 +51,10 @@ class User(db.Model):
         if not d:
             return None
         else:
-            return pytz.timezone(self.timezone).localize(d) if self.timezone else d
+            if self.timezone:
+                return d.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(self.timezone))
+            else:
+                return d
 
 class Group(db.Model):
     __tablename__ = 'groups'
@@ -90,7 +93,7 @@ class Feed(db.Model):
         return value_specs[0] if value_specs else None
 
     def update(self, parsed_feed):
-        self.fetched_at = datetime.now()
+        self.fetched_at = datetime.utcnow()
         if not parsed_feed:
             self.fetch_failed = True
             return
@@ -206,10 +209,6 @@ class Item(db.Model):
         return urlparse(self.url).netloc
 
     @property
-    def relative_date(self):
-        return format_timedelta(self.updated_at - datetime.now(), add_direction=True)
-
-    @property
     def value_spec(self):
         # TODO: check item value specs first, which can override feed value specs
         return self.feed.value_spec
@@ -277,7 +276,7 @@ class Action(db.Model):
         boost = 'boost'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    date = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id))
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
     action = db.Column(db.Enum(Actions), nullable=False)

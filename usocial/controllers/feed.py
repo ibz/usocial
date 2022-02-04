@@ -39,7 +39,9 @@ def get_items_feeds(feed_id, q):
     feeds = []
     for feed in m.Feed.query \
         .join(m.FeedGroup).join(m.Group) \
-        .filter(m.Group.user == current_user).all():
+        .filter(m.Group.user == current_user) \
+        .order_by(m.Feed.title) \
+        .all():
 
         feeds.append({
             'id': feed.id,
