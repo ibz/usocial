@@ -117,16 +117,16 @@
 
 <table class="items-table">
     {% for i in items %}
-        <tr class="main-row item-row">
-            <td id="item-{{ i.user_item.item_id }}"
-                data-id="{{ i.user_item.item_id }}"
-                data-feed_id="{{ i.feed_id }}"
-                data-enclosure_url="{{ i.enclosure_url }}"
-                data-enclosure_type="{{ i.enclosure_type }}"
-                data-play_position="{{ i.user_item.play_position }}"
-                {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}
-                class="item {% if i.enclosure_url %}podcast {% endif %}item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
-                onclick="itemClick(event, {{ i.feed_id }}, {{ i.user_item.item_id }}); return false;">
+        <tr id="item-{{ i.user_item.item_id }}"
+            class="main-row item-row item {% if i.enclosure_url %}podcast {% endif %}item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
+            onclick="itemClick(event, {{ i.feed_id }}, {{ i.user_item.item_id }}); return false;"
+            data-id="{{ i.user_item.item_id }}"
+            data-feed_id="{{ i.feed_id }}"
+            data-enclosure_url="{{ i.enclosure_url }}"
+            data-enclosure_type="{{ i.enclosure_type }}"
+            data-play_position="{{ i.user_item.play_position }}"
+            {% if feed_value_spec and feed_value_spec.is_supported %}data-has_value_spec="1"{% endif %}>
+            <td>
                 <span class="unlike-link">
                     <span onclick="likeItem({{ i.feed_id }}, {{ i.user_item.item_id }}, 0); return false;" href=""><i title="unlike" class="fas fa-heart" style="font-weight: solid;"></i></span>
                 </span>
