@@ -23,5 +23,6 @@
     <tr><td>Version</td><td>{{ version }}</td></tr>
     <tr><td>Build</td><td>{{ build }}</td></tr>
     <tr><td>Website</td><td><a href="http://usocial.me" target="_blank">usocial.me</a></td></tr>
+    <tr><td>LND</td><td>{% if lnd_info %}connected to node <small>{{ lnd_info.identity_pubkey }}</small>{% else %}not connected{% endif %}</td></tr>
 </table>
 {% endblock %}

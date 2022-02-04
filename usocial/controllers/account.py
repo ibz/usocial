@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token, curren
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from sqlalchemy.exc import IntegrityError
 
-from usocial import forms, models as m
+from usocial import forms, models as m, payments
 from usocial.main import app, db, jwt_required
 
 import config
@@ -47,8 +47,9 @@ def account():
 
     return render_template('account.html', user=current_user,
         played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
+        only_default_user=only_default_user(),
         version=config.VERSION, build=config.BUILD,
-        only_default_user=only_default_user())
+        lnd_info=payments.get_lnd_info())
 
 @account_blueprint.route('/account/login', methods=['GET', 'POST'])
 def login():

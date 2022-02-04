@@ -27,6 +27,12 @@ def get_lnd_client():
         macaroon_filepath=os.path.join(config.LND_DIR, "data/chain/bitcoin/mainnet/admin.macaroon"),
         cert_filepath=os.path.join(config.LND_DIR, "tls.cert"))
 
+def get_lnd_info():
+    lnd = get_lnd_client()
+    if not lnd:
+        return None
+    return lnd.get_info()
+
 def get_podcast_tlv(value_msat, user, action, feed, item=None, ts=None):
     tlv = {
         'value_msat': value_msat,
