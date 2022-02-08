@@ -34,7 +34,7 @@
                 </span>
             </td>
             <td id="feed-{{ feed.id }}">
-                {{ feed.title }} {% if feed.is_podcast %}<i class="fas fa-podcast"></i>{% else %}<i class="fas fa-blog"></i>{% endif %}
+                {{ feed.title }} {% if feed.can_play %}<i class="fas fa-podcast"></i>{% else %}<i class="fas fa-blog"></i>{% endif %}
             </td>
             <td>
                 {% if feed.fetch_failed %}<i class="fas fa-exclamation" title="fetch failed"></i>{% endif %}
@@ -104,7 +104,7 @@
 </table>
 {% endif %}
 
-{% if feed.is_podcast %}
+{% if feed.can_play %}
 <table class="fullWidthTable">
 <tr><td>
 <audio id="podcastPlayer" controls="controls" onvolumechange="podcastPlayerVolumeChanged();" data-volume="{{ user.audio_volume }}">
@@ -118,7 +118,7 @@
 <table class="items-table">
     {% for i in items %}
         <tr id="item-{{ i.user_item.item_id }}"
-            class="main-row item-row item {% if i.enclosure_url %}podcast {% endif %}item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
+            class="main-row item-row item item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
             onclick="itemClick(event, {{ i.feed_id }}, {{ i.user_item.item_id }}); return false;"
             data-id="{{ i.user_item.item_id }}"
             data-feed_id="{{ i.feed_id }}"

@@ -46,7 +46,6 @@ def get_items_feeds(feed_id, q):
         feeds.append({
             'id': feed.id,
             'title': feed.title,
-            'is_podcast': feed.is_podcast,
             'url': feed.url,
             'fetched_at': current_user.localize(feed.fetched_at),
             'fetch_failed': feed.fetch_failed,
@@ -63,6 +62,7 @@ def get_items_feeds(feed_id, q):
 
 def get_feed_details(feed_id, items):
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
+    can_play = any(i.get('enclosure_url') for i in items)
     if feed:
         q = db.session.query(m.UserItem) \
             .filter(m.UserItem.user_id == current_user.id, m.UserItem.item_id == m.Item.id, m.Item.feed_id == feed.id)
@@ -75,16 +75,16 @@ def get_feed_details(feed_id, items):
         played_value, paid_value = 0, 0
         paid_value_amounts = []
     actions = m.Action.query.filter_by(user_id=current_user.id, feed_id=feed_id).order_by(m.Action.date)
-    return feed, played_value, paid_value, paid_value_amounts, actions
+    return feed, can_play, played_value, paid_value, paid_value_amounts, actions
 
 @feed_blueprint.route('/feeds/all/items', methods=['GET'])
 @feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'])
 @jwt_required
 def items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.read == False)
-    feed, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
+    feed, can_play, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
     return render_template('items.html', feeds=feeds, items=items, counts=counts,
-        feed=feed,
+        feed=feed, can_play=can_play,
         played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
         actions=actions, user=current_user)
 
@@ -93,9 +93,9 @@ def items(feed_id=None):
 @jwt_required
 def liked_items(feed_id=None):
     items, feeds, counts = get_items_feeds(feed_id, m.UserItem.liked == True)
-    feed, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
+    feed, can_play, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
     return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True,
-        feed=feed,
+        feed=feed, can_play=can_play,
         played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
         actions=actions, user=current_user)
 
@@ -210,8 +210,7 @@ def follow_podcast():
         feed = m.Feed(
             url=request.form['url'],
             homepage_url=request.form['homepage_url'],
-            title=request.form['title'],
-            is_podcast=True)
+            title=request.form['title'])
         db.session.add(feed)
     parsed_feed = parse_feed(feed.url)
     if not parsed_feed:
