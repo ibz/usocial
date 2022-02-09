@@ -2,7 +2,9 @@ Read more at [usocial.me](http://usocial.me).
 
 ## Running usocial
 
-If you want to just run **usocial** on your laptop, home server or VPS, [check the instructions here](https://usocial.me/running).
+The recommended way to run **usocial** on [Umbrel](https://github.com/getumbrel/umbrel) and [Citadel](https://github.com/runcitadel) is to install it from the respective dashboard.
+
+If you want to run **usocial** on your laptop, home server or VPS, [check the instructions here](https://usocial.me/running).
 
 If you want to debug or edit the code, keep reading.
 
