@@ -4,17 +4,18 @@ ARG version
 
 RUN apt-get update && apt-get install -y cron sudo
 
+COPY requirements.txt /
+ENV PYTHONPATH "${PYTHONPATH}:/"
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r /requirements.txt
+
 COPY ./usocial /usocial
 COPY ./migrations /migrations
-COPY requirements.txt config.py start.sh /
+COPY config.py start.sh /
 RUN chmod +x /start.sh
 
 RUN echo "VERSION = '${version}'" >> /config.py \
  && echo "BUILD = '"`date +%Y%m%d`"'" >> /config.py
-
-ENV PYTHONPATH "${PYTHONPATH}:/"
-
-RUN pip install --upgrade pip && pip install --no-cache-dir -r /requirements.txt
 
 ENV INSTANCE_PATH=/instance
 VOLUME ["/instance"]
