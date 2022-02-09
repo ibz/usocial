@@ -9,6 +9,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, JWTManager, set_access_cookies, verify_jwt_in_request
 from flask_jwt_extended.exceptions import NoAuthorizationError
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_wtf.csrf import CSRFProtect
@@ -56,6 +57,7 @@ csrf = CSRFProtect(app)
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+migrate = Migrate(app, db)
 
 @app.cli.command("create-db")
 @with_appcontext
