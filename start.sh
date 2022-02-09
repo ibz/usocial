@@ -9,6 +9,8 @@ setup_web () {
     if [ ! -f /instance/usocial.db ]; then
         FLASK_APP=main DEFAULT_USER_PASSWORD=${APP_PASSWORD} flask create-db
     fi
+
+    FLASK_APP=main flask db upgrade
 }
 
 do_job_web () {

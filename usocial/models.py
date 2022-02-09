@@ -30,6 +30,15 @@ class User(db.Model):
 
     groups = db.relationship('Group', backref='user')
 
+    @classmethod
+    def create_default_user(cls):
+        app.logger.info("Creating the default user.")
+        user = cls(cls.DEFAULT_USERNAME)
+        if config.DEFAULT_USER_PASSWORD:
+            app.logger.info("Setting password for the default user.")
+            user.set_password(config.DEFAULT_USER_PASSWORD)
+        return user
+
     def __init__(self, username):
         self.username = username
         self.fever_api_key = hashlib.md5(("%s:" % username).encode('utf-8')).hexdigest()
@@ -322,14 +331,3 @@ class Error(db.Model):
     item_ids = db.Column(db.String(1000), nullable=True)
     custom_records = db.Column(db.String(1000), nullable=False)
     message = db.Column(db.String(1000), nullable=False)
-
-def create_all():
-    db.create_all()
-
-    app.logger.info("Creating the default user.")
-    default_user = User(User.DEFAULT_USERNAME)
-    if config.DEFAULT_USER_PASSWORD:
-        app.logger.info("Setting password for the default user.")
-        default_user.set_password(config.DEFAULT_USER_PASSWORD)
-    db.session.add(default_user)
-    db.session.commit()

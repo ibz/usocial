@@ -57,20 +57,24 @@ csrf = CSRFProtect(app)
 bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+from usocial import models as m
+
 migrate = Migrate(app, db)
 
 @app.cli.command("create-db")
 @with_appcontext
 def create_db():
-    from usocial import models as m
-    m.create_all()
+    db.create_all()
+
+    db.session.add(m.User.create_default_user())
+    db.session.commit()
 
 @app.cli.command("create-user")
 @click.argument("username")
 @with_appcontext
 def create_user(username):
     try:
-        from usocial import models as m
         db.session.add(m.User(username))
         db.session.commit()
     except IntegrityError:
@@ -80,9 +84,8 @@ def create_user(username):
 @app.cli.command("fetch-feeds")
 @with_appcontext
 def fetch_feeds():
-    from usocial import models
     from usocial.parser import parse_feed
-    for feed in models.Feed.query.all():
+    for feed in m.Feed.query.all():
         parsed_feed = parse_feed(feed.url)
         feed.update(parsed_feed)
         new_items_count = 0
@@ -93,10 +96,10 @@ def fetch_feeds():
                 db.session.add(item)
             if new_items:
                 new_items_count = len(new_items)
-                for user in models.User.query.join(models.Group).join(models.FeedGroup).join(models.Feed).filter(models.FeedGroup.feed == feed):
+                for user in m.User.query.join(m.Group).join(m.FeedGroup).join(m.Feed).filter(m.FeedGroup.feed == feed):
                     users_count += 1
                     for item in new_items:
-                        db.session.add(models.UserItem(user=user, item=item))
+                        db.session.add(m.UserItem(user=user, item=item))
         db.session.add(feed)
         db.session.commit()
 
