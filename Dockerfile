@@ -10,7 +10,7 @@ RUN pip install --upgrade pip \
  && pip install --no-cache-dir -r /requirements.txt
 
 COPY ./usocial /usocial
-COPY ./migrations /migrations
+COPY ./migrations /usocial/migrations
 COPY config.py start.sh /
 RUN chmod +x /start.sh
 
