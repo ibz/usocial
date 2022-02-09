@@ -233,9 +233,6 @@ function playPodcastItem(feedId, itemId) {
         var currItem = null;
         var nextItem = null;
         for (const i of document.querySelectorAll('.item')) {
-            if (!i.dataset.enclosure_url) {
-                continue;
-            }
             if (parseInt(i.dataset.id) === itemId) {
                 hideItem(feedId, itemId, 1);
                 currItem = i;
@@ -271,7 +268,7 @@ function itemClick(e, feedId, itemId) {
     }
 
     var item = document.getElementById('item-' + itemId);
-    if (item.dataset.enclosure_url) {
+    if (item.classList.contains('podcast')) {
         playPodcastItem(feedId, itemId);
     }
 }

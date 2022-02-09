@@ -73,6 +73,7 @@ class Feed(db.Model):
     url = db.Column(db.String(1000), unique=True, nullable=False)
     homepage_url = db.Column(db.String(1000), nullable=False)
     title = db.Column(db.String(1000))
+    is_podcast = db.Column(db.Boolean, nullable=False, default=False)
     updated_at = db.Column(db.DateTime)
     fetched_at = db.Column(db.DateTime)
     fetch_failed = db.Column(db.Boolean, default=False)
