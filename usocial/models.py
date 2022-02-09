@@ -181,7 +181,10 @@ class Feed(db.Model):
                     if e['enclosure']:
                         item.enclosure_url = e['enclosure']['href']
                         item.enclosure_type = e['enclosure']['type']
-                        item.enclosure_length = int(e['enclosure']['length'])
+                        try:
+                            item.enclosure_length = int(e['enclosure']['length'])
+                        except ValueError:
+                            item.enclosure_length = 0
                         self.is_podcast = True
                     new_items.append(item)
                     new_item_urls.add(e['url'])
