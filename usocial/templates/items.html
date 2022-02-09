@@ -11,15 +11,6 @@
 <table class="split-panels">
 <tr><td class="left-panel">
 <table class="feeds-table">
-    <tr class="main-row feed-row">
-        <td class="feed-actions"></td>
-        <td id="feed-"
-            onclick="feedClick(event, null, {% if liked %}true{% else %}false{% endif %}); return false;">
-            All
-        </td>
-        <td></td>
-        <td>{{ counts['total'] }}</td>
-    </tr>
     {% for feed in feeds %}
     {% if counts[feed.id] %}
         <tr class="main-row feed-row {% if feed.active %}feed-active {% endif %}"
