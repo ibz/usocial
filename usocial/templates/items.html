@@ -109,7 +109,7 @@
 <table class="items-table">
     {% for i in items %}
         <tr id="item-{{ i.user_item.item_id }}"
-            class="main-row item-row item {% if i.enclosure_url %}podcast {% endif %}item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
+            class="main-row item-row item item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
             onclick="itemClick(event, {{ i.feed_id }}, {{ i.user_item.item_id }}); return false;"
             data-id="{{ i.user_item.item_id }}"
             data-feed_id="{{ i.feed_id }}"

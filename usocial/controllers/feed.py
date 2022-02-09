@@ -19,6 +19,10 @@ import config
 feed_blueprint = Blueprint('feed', __name__)
 
 def get_items_feeds(feed_id, q):
+    def item_to_dict(i):
+        return {
+            'user_item': i[0], 'url': i[1], 'title': i[2], 'feed_id': i[3], 'updated_at': i[4],
+            'enclosure_url': i[5], 'enclosure_type': i[6]}
     items = m.UserItem.query \
             .join(m.Item) \
             .add_columns(m.Item.url, m.Item.title, m.Item.feed_id, m.Item.updated_at, m.Item.enclosure_url, m.Item.enclosure_type) \
@@ -27,15 +31,6 @@ def get_items_feeds(feed_id, q):
             .order_by(m.Item.updated_at.desc())
     if feed_id:
         items = items.filter(m.Item.feed_id == feed_id)
-    items = [{
-        'user_item': i[0],
-        'url': i[1],
-        'title': i[2],
-        'feed_id': i[3],
-        'updated_at': i[4],
-        'enclosure_url': i[5],
-        'enclosure_type': i[6]}
-        for i in items]
     feeds = []
     for feed in m.Feed.query \
         .join(m.FeedGroup).join(m.Group) \
@@ -59,7 +54,7 @@ def get_items_feeds(feed_id, q):
         .filter(q) \
         .group_by(m.Feed.id).all()}
     counts['total'] = sum(counts.values())
-    return items, feeds, counts
+    return map(item_to_dict, items), feeds, counts
 
 def get_feed_details(feed_id, items):
     feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
@@ -210,8 +205,7 @@ def follow_podcast():
         feed = m.Feed(
             url=request.form['url'],
             homepage_url=request.form['homepage_url'],
-            title=request.form['title'],
-            is_podcast=True)
+            title=request.form['title'])
         db.session.add(feed)
     parsed_feed = parse_feed(feed.url)
     if not parsed_feed:

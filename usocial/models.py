@@ -182,6 +182,7 @@ class Feed(db.Model):
                         item.enclosure_url = e['enclosure']['href']
                         item.enclosure_type = e['enclosure']['type']
                         item.enclosure_length = int(e['enclosure']['length'])
+                        self.is_podcast = True
                     new_items.append(item)
                     new_item_urls.add(e['url'])
             elif item.title != e['title'] or item.updated_at != e['updated_at']:
