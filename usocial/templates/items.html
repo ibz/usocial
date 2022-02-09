@@ -34,7 +34,7 @@
                 </span>
             </td>
             <td id="feed-{{ feed.id }}">
-                {{ feed.title }} {% if feed.can_play %}<i class="fas fa-podcast"></i>{% else %}<i class="fas fa-blog"></i>{% endif %}
+                {{ feed.title }}
             </td>
             <td>
                 {% if feed.fetch_failed %}<i class="fas fa-exclamation" title="fetch failed"></i>{% endif %}
@@ -104,7 +104,7 @@
 </table>
 {% endif %}
 
-{% if feed.can_play %}
+{% if can_play %}
 <table class="fullWidthTable">
 <tr><td>
 <audio id="podcastPlayer" controls="controls" onvolumechange="podcastPlayerVolumeChanged();" data-volume="{{ user.audio_volume }}">
