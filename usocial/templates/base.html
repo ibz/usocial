@@ -24,8 +24,8 @@
                     <tr>
                     <td>
                         {% if user %}
-                            <a href="{{ url_for('feed.items') }}"><i title="my feeds" class="fas fa-rss"></i></a> |
-                            <a href="{{ url_for('feed.liked_items') }}"><i title="my liked items" class="fas fa-heart"></i></a>
+                            <a href="{{ url_for('feed.items', liked=False) }}"><i title="my feeds" class="fas fa-rss"></i></a> |
+                            <a href="{{ url_for('feed.items', liked=True) }}"><i title="my liked items" class="fas fa-heart"></i></a>
                         {% else %}
                             Welcome to <strong>usocial</strong>. Please log in to continue.
                         {% endif %}

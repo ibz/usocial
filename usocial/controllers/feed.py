@@ -56,43 +56,34 @@ def get_items_feeds(feed_id, q):
     counts['total'] = sum(counts.values())
     return map(item_to_dict, items), feeds, counts
 
-def get_feed_details(feed_id, items):
-    feed = m.Feed.query.filter_by(id=feed_id).one_or_none() if feed_id else None
-    if feed:
+@feed_blueprint.route('/feeds/all/items', methods=['GET'], defaults={'liked': False})
+@feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'], defaults={'liked': False})
+@feed_blueprint.route('/feeds/all/items/liked', methods=['GET'], defaults={'liked': True})
+@feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'], defaults={'liked': True})
+@jwt_required
+def items(liked, feed_id=None):
+    user_item_filter = m.UserItem.liked == True if liked else m.UserItem.read == False
+    items, feeds, counts = get_items_feeds(feed_id, user_item_filter)
+
+    feed = None
+    show_player = any(f['is_podcast'] for f in feeds)
+    played_value, paid_value, paid_value_amounts, actions = 0, 0, [], []
+    if feed_id:
+        feed = m.Feed.query.get_or_404(feed_id)
+        show_player = feed.is_podcast
         q = db.session.query(m.UserItem) \
-            .filter(m.UserItem.user_id == current_user.id, m.UserItem.item_id == m.Item.id, m.Item.feed_id == feed.id)
+            .filter(m.UserItem.user_id == current_user.id, m.UserItem.item_id == m.Item.id, m.Item.feed_id == feed_id)
         sum_q = q.statement.with_only_columns([
             db.func.coalesce(db.func.sum(m.UserItem.stream_value_played), 0),
             db.func.coalesce(db.func.sum(m.UserItem.stream_value_paid), 0)])
         played_value, paid_value = q.session.execute(sum_q).one()
         paid_value_amounts = m.Action.get_total_amounts(current_user, feed_id)
-    else:
-        played_value, paid_value = 0, 0
-        paid_value_amounts = []
-    actions = m.Action.query.filter_by(user_id=current_user.id, feed_id=feed_id).order_by(m.Action.date)
-    return feed, played_value, paid_value, paid_value_amounts, actions
+        actions = m.Action.query.filter_by(user_id=current_user.id, feed_id=feed_id).order_by(m.Action.date)
 
-@feed_blueprint.route('/feeds/all/items', methods=['GET'])
-@feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'])
-@jwt_required
-def items(feed_id=None):
-    items, feeds, counts = get_items_feeds(feed_id, m.UserItem.read == False)
-    feed, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
-    return render_template('items.html', feeds=feeds, items=items, counts=counts,
-        feed=feed,
-        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
-        actions=actions, user=current_user)
-
-@feed_blueprint.route('/feeds/all/items/liked', methods=['GET'])
-@feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'])
-@jwt_required
-def liked_items(feed_id=None):
-    items, feeds, counts = get_items_feeds(feed_id, m.UserItem.liked == True)
-    feed, played_value, paid_value, paid_value_amounts, actions = get_feed_details(feed_id, items)
-    return render_template('items.html', feeds=feeds, items=items, counts=counts, liked=True,
-        feed=feed,
-        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts,
-        actions=actions, user=current_user)
+    return render_template('items.html', liked=liked, user=current_user,
+        feeds=feeds, items=items, counts=counts,
+        feed=feed, show_player=show_player,
+        played_value=played_value, paid_value=paid_value, paid_value_amounts=paid_value_amounts, actions=actions)
 
 @feed_blueprint.route('/feeds/<int:feed_id>/follow', methods=['POST'])
 @jwt_required
