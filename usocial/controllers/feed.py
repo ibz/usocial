@@ -154,7 +154,7 @@ def add_website():
             if item.id not in existing_item_ids:
                 db.session.add(m.UserItem(user=current_user, item=item))
         db.session.commit()
-        return redirect(url_for('feed.items'))
+        return redirect(url_for('feed.items', liked=False))
     else:
         form = forms.FollowFeedForm()
         form.url.choices = alt_links

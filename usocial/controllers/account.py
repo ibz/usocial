@@ -13,7 +13,7 @@ import config
 account_blueprint = Blueprint('account', __name__)
 
 def login_success(user):
-    response = redirect(url_for('feed.items'))
+    response = redirect(url_for('feed.items', liked=False))
     set_access_cookies(response, create_access_token(identity=user.username))
     set_refresh_cookies(response, create_refresh_token(identity=user.username))
     return response
@@ -31,7 +31,7 @@ def login_default_user():
 def index():
     try:
         verify_jwt_in_request()
-        return redirect(url_for('feed.items'))
+        return redirect(url_for('feed.items', liked=False))
     except NoAuthorizationError:
         return login_default_user() or redirect(url_for('account.login'))
 
@@ -55,7 +55,7 @@ def account():
 def login():
     if request.method == 'GET':
         if current_user:
-            return redirect(url_for('feed.items'))
+            return redirect(url_for('feed.items', liked=False))
         else:
             return login_default_user() or render_template('login.html', user=None, skip_username=bool(only_default_user()), form=forms.LoginForm())
 
