@@ -99,6 +99,7 @@ class Feed(db.Model):
     def value_spec(self):
         # get value_spec for the feed (item_id is None)
         value_specs = [s for s in self.value_specs if s.item_id is None]
+        assert len(value_specs) in (0, 1)
         return value_specs[0] if value_specs else None
 
     def update(self, parsed_feed):
@@ -127,45 +128,62 @@ class Feed(db.Model):
         if not p_value_spec:
             if value_spec:
                 db.session.delete(value_spec)
+                app.logger.info(f"ValueSpec deleted for feed_id={self.id}")
         else: # got a value spec from the feed
             if value_spec:
-                value_spec_changed = False
                 if value_spec.protocol != p_value_spec['protocol'] or value_spec.method != p_value_spec['method'] or value_spec.suggested_amount != p_value_spec['suggested_amount']:
-                    value_spec_changed = True
+                    value_spec.protocol = p_value_spec['protocol']
+                    value_spec.method = p_value_spec['method']
+                    value_spec.suggested_amount = p_value_spec['suggested_amount']
+                    db.session.add(value_spec)
                     app.logger.info(f"ValueSpec changed for feed_id={self.id}: protocol {value_spec.protocol} -> {p_value_spec['protocol']}, method {value_spec.method} -> {p_value_spec['method']}, suggested_amount {value_spec.suggested_amount} -> {p_value_spec['suggested_amount']}")
-                if len(value_spec.recipients) != len(p_value_recipients):
-                    value_spec_changed = True
-                    app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipients {len(value_spec.recipients)} -> {len(p_value_recipients)}")
+
                 recipients_by_address = {r.address: r for r in value_spec.recipients}
                 p_recipients_by_address = {p_r['address']: p_r for p_r in p_value_recipients}
-                if set(recipients_by_address.keys()) != set(p_recipients_by_address.keys()):
-                    value_spec_changed = True
-                    app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipients {sorted(recipients_by_address.keys())} -> {sorted(p_recipients_by_address.keys())}")
-                if not value_spec_changed:
-                    for r_a, r in recipients_by_address.items():
-                        if r.name != p_recipients_by_address[r_a]['name']:
-                            value_spec_changed = True
-                            app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {r_a} name {r.name} -> {p_recipients_by_address[r_a]['name']}")
-                        if r.address_type != p_recipients_by_address[r_a]['address_type']:
-                            value_spec_changed = True
-                            app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {r_a} address type {r.address_type} -> {p_recipients_by_address[r_a]['address_type']}")
-                        if r.split != p_recipients_by_address[r_a]['split']:
-                            value_spec_changed = True
-                            app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {r_a} split {r.split} -> {p_recipients_by_address[r_a]['split']}")
-                if not value_spec_changed:
-                    return # nothing to do
+                for deleted_a in set(recipients_by_address.keys()) - set(p_recipients_by_address.keys()):
+                    db.session.delete(recipients_by_address[deleted_a])
+                    del recipients_by_address[deleted_a]
+                    app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {deleted_a} removed")
+                for added_a in set(p_recipients_by_address.keys()) - set(recipients_by_address.keys()):
+                    p_recipient = p_recipients_by_address[added_a]
+                    recipient = ValueRecipient(
+                        value_spec_id=value_spec.id,
+                        name=p_recipient['name'],
+                        address_type=p_recipient['address_type'], address=p_recipient['address'],
+                        custom_key=p_recipient['custom_key'], custom_value=p_recipient['custom_value'],
+                        split=p_recipient['split'])
+                    db.session.add(recipient)
+                    recipients_by_address[added_a] = recipient
+                    app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {added_a} added. name: {recipient.name} split: {recipient.split}")
 
-                db.session.delete(value_spec) # delete the outdated value spec
-
-            value_spec = ValueSpec(protocol=p_value_spec['protocol'], method=p_value_spec['method'], suggested_amount=p_value_spec['suggested_amount'])
-            for p_recipient in p_value_recipients:
-                recipient = ValueRecipient(
-                    name=p_recipient['name'],
-                    address_type=p_recipient['address_type'], address=p_recipient['address'],
-                    custom_key=p_recipient['custom_key'], custom_value=p_recipient['custom_value'],
-                    split=p_recipient['split'])
-                value_spec.recipients.append(recipient)
-            self.value_specs.append(value_spec)
+                for r_a, r in recipients_by_address.items():
+                    p_r = p_recipients_by_address[r_a]
+                    if r.name != p_r['name']:
+                        r.name = p_r['name']
+                        db.session.add(r)
+                        app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {r_a} name {r.name} -> {p_r['name']}")
+                    if r.address_type != p_r['address_type']:
+                        r.address_type = p_r['address_type']
+                        db.session.add(r)
+                        app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {r_a} address type {r.address_type} -> {p_r['address_type']}")
+                    if r.split != p_r['split']:
+                        r.split = p_r['split']
+                        db.session.add(r)
+                        app.logger.info(f"ValueSpec changed for feed_id={self.id}: recipient {r_a} split {r.split} -> {p_r['split']}")
+            else: # this is new, we didn't have ValueSpec yet, so just add
+                value_spec = ValueSpec(feed_id=self.id, protocol=p_value_spec['protocol'], method=p_value_spec['method'], suggested_amount=p_value_spec['suggested_amount'])
+                db.session.add(value_spec)
+                for p_recipient in p_value_recipients:
+                    recipient = ValueRecipient(
+                        value_spec=value_spec,
+                        name=p_recipient['name'],
+                        address_type=p_recipient['address_type'], address=p_recipient['address'],
+                        custom_key=p_recipient['custom_key'], custom_value=p_recipient['custom_value'],
+                        split=p_recipient['split'])
+                    db.session.add(recipient)
+                    value_spec.recipients.append(recipient)
+                self.value_specs.append(value_spec)
+                app.logger.info(f"ValueSpec added to feed_id={self.id} with suggested_amount={value_spec.suggested_amount} and {len(p_value_recipients)} recipients")
 
     def update_items(self, parsed_feed):
         new_item_urls = set()
