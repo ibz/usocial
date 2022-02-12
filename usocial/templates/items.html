@@ -146,7 +146,11 @@
                 </span>
                 {{ i.title }}
             </td>
+            {% if i.updated_at %}
             <td title="{{ i.updated_at.strftime('%-d %b %Y %-H:%M') }}"><nobr>{{ i.updated_at.strftime('%-d %b') }}</nobr></td>
+            {% else %}
+            <td></td>
+            {% endif %}
         </tr>
         <tr><td></td></tr>
     {% endfor %}

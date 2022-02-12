@@ -28,6 +28,8 @@ def parse_feed_datetime(dt):
         return None
     try:
         return datetime.fromtimestamp(mktime(dt))
+    except ValueError:
+        return None
     except OverflowError:
         return None
 
