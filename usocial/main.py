@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import wraps
 import os
 import sys
@@ -85,25 +86,34 @@ def create_user(username):
 @with_appcontext
 def fetch_feeds():
     from usocial.parser import parse_feed
-    for feed in m.Feed.query.all():
-        parsed_feed = parse_feed(feed.url)
-        feed.update(parsed_feed)
-        new_items_count = 0
-        users_count = 0
-        if parsed_feed:
-            new_items, updated_items = feed.update_items(parsed_feed)
-            for item in new_items + updated_items:
-                db.session.add(item)
-            if new_items:
-                new_items_count = len(new_items)
-                for user in m.User.query.join(m.Group).join(m.FeedGroup).join(m.Feed).filter(m.FeedGroup.feed == feed):
-                    users_count += 1
-                    for item in new_items:
-                        db.session.add(m.UserItem(user=user, item=item))
-        db.session.add(feed)
-        db.session.commit()
-
-        app.logger.info(f"Feed fetched: {feed.url}. New items: {new_items_count}. Affected users: {users_count}.")
+    for feed_id, in list(m.Feed.query.with_entities(m.Feed.id).all()):
+        try:
+            feed = m.Feed.query.get(feed_id)
+            parsed_feed = parse_feed(feed.url)
+            feed.update(parsed_feed)
+            new_items_count = 0
+            users_count = 0
+            if parsed_feed:
+                new_items, updated_items = feed.update_items(parsed_feed)
+                for item in new_items + updated_items:
+                    db.session.add(item)
+                if new_items:
+                    new_items_count = len(new_items)
+                    for user in m.User.query.join(m.Group).join(m.FeedGroup).join(m.Feed).filter(m.FeedGroup.feed == feed):
+                        users_count += 1
+                        for item in new_items:
+                            db.session.add(m.UserItem(user=user, item=item))
+            db.session.add(feed)
+            db.session.commit()
+            app.logger.info(f"Feed fetched: {feed.url}. New items: {new_items_count}. Affected users: {users_count}.")
+        except Exception as e:
+            app.logger.exception(e)
+            db.session.rollback()
+            feed = m.Feed.query.get(feed_id)
+            feed.fetched_at = datetime.utcnow()
+            feed.fetch_failed = True
+            db.session.add(feed)
+            db.session.commit()
 
 @jwt.token_verification_failed_loader
 def no_jwt():
