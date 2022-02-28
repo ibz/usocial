@@ -40,28 +40,39 @@ def parse_rss_item(item):
     description_el = item.find('description')
     enclosure = None
     enclosure_el = item.find('enclosure')
-    if enclosure_el:
+    if enclosure_el is not None:
         enclosure = {'href': enclosure_el.get('url'), 'type': enclosure_el.get('type'), 'length': enclosure_el.get('length')}
+    link = item.find('link')
+    if link is not None:
+        url = link.text
+    elif enclosure:
+        url = enclosure['href']
+    else:
+        url = None
     return {'title': item.find('title').text,
-            'url': item.find('link').text,
-            'content': description_el.text if description_el else None,
+            'url': url,
+            'content': description_el.text if description_el is not None else None,
             'enclosure': enclosure,
             'updated_at': parse_datetime(item.find('pubDate').text)}
 
 def parse_feed_item(item):
     enclosure_links = [l for l in item['links'] if l['rel'] == 'enclosure']
+    url = item.get('link')
+    if not url and enclosure_links:
+        url = enclosure_links[0]['href']
+    updated_at = parse_feed_datetime(item.get('updated_parsed')) or (parse_datetime(item['updated']) if item['updated'] else None)
     return {'title': item['title'],
-            'url': item['link'],
+            'url': url,
             'content': item['content'][0]['value'] if item.get('content') else item.get('summary'),
             'enclosure': enclosure_links[0] if enclosure_links else None,
-            'updated_at': parse_feed_datetime(item.get('updated_parsed'))}
+            'updated_at': updated_at}
 
 def parse_valuespec(root):
     value_spec = None
     value_recipients = []
 
     value_el = root.find('channel/{%s}value' % PODCAST_NAMESPACE_URI)
-    if value_el:
+    if value_el is not None:
         value_spec = {}
         value_spec['protocol'] = value_el.attrib['type']
         value_spec['method'] = value_el.attrib['method']
@@ -82,9 +93,12 @@ def parse_feed(url):
     app.logger.debug(f'Parsing feed {url}...')
 
     try:
-        content = requests.get(url, headers=HEADERS, timeout=10).text
+        response = requests.get(url, headers=HEADERS, timeout=10)
+        if not response.ok:
+            return
+        content = response.text
     except Exception as e:
-        app.log_exception(e)
+        app.logger.exception(e)
         return
     if len(content) < 10:
         app.logger.warn("Content too short.")
@@ -109,13 +123,19 @@ def parse_feed(url):
             try:
                 root = fromstring(content)
             except ParseError as e:
-                app.log_exception(e)
+                app.logger.exception(e)
             if root:
                 value_spec, value_recipients = parse_valuespec(root)
                 app.logger.debug(f'Parsed ValueSpec: {value_spec is not None} {len(value_recipients)}')
+        items = []
+        for e in f['entries']:
+            if e and e.get('title'):
+                item = parse_feed_item(e)
+                if item['url']:
+                    items.append(item)
         return {'title': f['feed']['title'],
                 'updated_at': parse_feed_datetime(f['feed'].get('updated_parsed')),
-                'items': [parse_feed_item(e) for e in f['entries'] if e and e.get('link') and e.get('title')],
+                'items': items,
                 'value_spec': value_spec, 'value_recipients': value_recipients,
                 'parser': PARSER_FEEDPARSER}
 
@@ -123,24 +143,25 @@ def parse_feed(url):
         root = fromstring(content)
         app.logger.debug(f'Parsed feed {url} using PARSER_ELEMENTTREE')
     except ParseError as e:
-        app.log_exception(e)
+        app.logger.exception(e)
         return
 
     title_el = root.find('channel/title')
-    if not title_el:
+    if title_el is None:
         app.logger.warn("No channel/title element found.")
-        return
-    link_el = root.find('channel/link')
-    if not link_el:
-        app.logger.warn("No channel/link element found.")
         return
     date_el = root.find('channel/lastBuildDate')
 
     value_spec, value_recipients = parse_valuespec(root)
 
+    items = []
+    for item in root.findall('channel/item'):
+        item = parse_rss_item(item)
+        if item['url']:
+            items.append(item)
     return {'title': title_el.text,
             'updated_at': parse_datetime(date_el.text) if date_el else None,
-            'items': [parse_rss_item(item) for item in root.findall('channel/item')],
+            'items': items,
             'value_spec': value_spec, 'value_recipients': value_recipients,
             'parser': PARSER_ELEMENTTREE}
 
