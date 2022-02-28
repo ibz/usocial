@@ -18,7 +18,7 @@ import config
 
 feed_blueprint = Blueprint('feed', __name__)
 
-def get_items_feeds(feed_id, q):
+def get_items_feeds(feed_id, item_q):
     def item_to_dict(i):
         return {
             'user_item': i[0], 'url': i[1], 'title': i[2], 'feed_id': i[3], 'updated_at': i[4],
@@ -27,10 +27,14 @@ def get_items_feeds(feed_id, q):
             .join(m.Item) \
             .add_columns(m.Item.url, m.Item.title, m.Item.feed_id, m.Item.updated_at, m.Item.enclosure_url, m.Item.enclosure_type) \
             .filter(m.UserItem.user == current_user) \
-            .filter(q) \
+            .filter(item_q) \
             .order_by(m.Item.updated_at.desc())
-    if feed_id:
+    try:
+        feed_id = int(feed_id)
         items = items.filter(m.Item.feed_id == feed_id)
+    except ValueError:
+        if feed_id == 'playing':
+            items = items.filter(m.UserItem.play_position != 0)
     feeds = []
     for feed in m.Feed.query \
         .join(m.FeedGroup).join(m.Group) \
@@ -51,24 +55,29 @@ def get_items_feeds(feed_id, q):
     counts = {f_id: c for f_id, c in db.session.query(m.Feed.id, db.func.count(m.UserItem.item_id)) \
         .select_from(m.Feed).join(m.Item).join(m.UserItem) \
         .filter(m.UserItem.user == current_user) \
-        .filter(q) \
+        .filter(item_q) \
         .group_by(m.Feed.id).all()}
     counts['total'] = sum(counts.values())
     return map(item_to_dict, items), feeds, counts
 
-@feed_blueprint.route('/feeds/all/items', methods=['GET'], defaults={'liked': False})
+@feed_blueprint.route('/feeds/all/items', methods=['GET'], defaults={'feed_id': 'all', 'liked': False})
+@feed_blueprint.route('/feeds/playing/items', methods=['GET'], defaults={'feed_id': 'playing', 'liked': False})
 @feed_blueprint.route('/feeds/<int:feed_id>/items', methods=['GET'], defaults={'liked': False})
-@feed_blueprint.route('/feeds/all/items/liked', methods=['GET'], defaults={'liked': True})
+@feed_blueprint.route('/feeds/all/items/liked', methods=['GET'], defaults={'feed_id': 'all', 'liked': True})
+@feed_blueprint.route('/feeds/playing/items/liked', methods=['GET'], defaults={'feed_id': 'playing', 'liked': True})
 @feed_blueprint.route('/feeds/<int:feed_id>/items/liked', methods=['GET'], defaults={'liked': True})
 @jwt_required
-def items(liked, feed_id=None):
+def items(liked, feed_id):
     user_item_filter = m.UserItem.liked == True if liked else m.UserItem.read == False
     items, feeds, counts = get_items_feeds(feed_id, user_item_filter)
 
     feed = None
-    show_player = any(f['is_podcast'] for f in feeds)
     played_value, paid_value, paid_value_amounts, actions = 0, 0, [], []
-    if feed_id:
+    if feed_id == 'all':
+        show_player = any(f['is_podcast'] for f in feeds)
+    elif feed_id == 'playing':
+        show_player = True
+    else:
         feed = m.Feed.query.get_or_404(feed_id)
         show_player = feed.is_podcast
         q = db.session.query(m.UserItem) \

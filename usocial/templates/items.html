@@ -13,12 +13,21 @@
 <table class="feeds-table">
     <tr class="main-row feed-row">
         <td class="feed-actions"></td>
-        <td id="feed-"
-            onclick="feedClick(event, null, {% if liked %}true{% else %}false{% endif %}); return false;">
+        <td id="feed-all"
+            onclick="feedClick(event, 'all', {% if liked %}true{% else %}false{% endif %}); return false;">
             All
         </td>
         <td></td>
         <td>{{ counts['total'] }}</td>
+    </tr>
+    <tr class="main-row feed-row">
+        <td class="feed-actions"></td>
+        <td id="feed-playing"
+            onclick="feedClick(event, 'playing', {% if liked %}true{% else %}false{% endif %}); return false;">
+            Playing
+        </td>
+        <td></td>
+        <td></td>
     </tr>
     {% for feed in feeds %}
     {% if counts[feed.id] %}
