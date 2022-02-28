@@ -124,7 +124,7 @@
 </table>
 {% endif %}
 
-<table class="items-table">
+<table id="items" class="items-table">
     {% for i in items %}
         <tr id="item-{{ i.user_item.item_id }}"
             class="main-row item-row item item-liked-{% if i.user_item.liked %}1{% else %}0{% endif %} item-hidden-{% if i.user_item.read %}1{% else %}0{% endif %}"
