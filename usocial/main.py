@@ -63,6 +63,16 @@ from usocial import models as m
 
 migrate = Migrate(app, db)
 
+@app.template_filter('autoversion')
+def autoversion_filter(filename):
+    fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename[1:])
+    try:
+        timestamp = str(int(os.path.getmtime(fullpath)))
+    except OSError:
+        return filename
+    newfilename = "{0}?v={1}".format(filename, timestamp)
+    return newfilename
+
 @app.cli.command("create-db")
 @with_appcontext
 def create_db():
