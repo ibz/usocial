@@ -165,6 +165,11 @@ function followPodcast(podcastindex_id, url, homepage_url, title) {
             replaceClass(`podcast-${podcastindex_id}`, `feed-followed-0`, `feed-followed-1`);
             followLink.onclick = oldCB;
             followLink.innerHTML = oldContent;
+        },
+        function(_) {
+            followLink.onclick = oldCB;
+            followLink.innerHTML = oldContent;
+            alert("Failed to follow podcast.");
         }
     );
 }
@@ -250,7 +255,7 @@ function playPodcastItem(feedId, itemId) {
             boost.style.display = "none";
         }
         if (nextItem) {
-            playPodcastItem(nextItem.dataset.feed_id, nextItem.dataset.id);
+            playPodcastItem(parseInt(nextItem.dataset.feed_id), parseInt(nextItem.dataset.id));
         } else {
             currItem.classList.remove('item-active');
         }
