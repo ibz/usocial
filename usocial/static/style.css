@@ -21,7 +21,6 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; overflow: scroll; }
 .extra-row { color: gray; }
 .split-panels { width: 100%; }
 .left-panel, .right-panel { vertical-align: top; }
-.left-panel { width: 40%; } .right-panel { width: 60%; }
 .feeds-table { width: 100%; border-spacing: 0; }
 .feed-actions { width: 5%; }
 .items-table { width: 100%; border-spacing: 0; }
@@ -33,6 +32,14 @@ body { font-family: Verdana, Geneva, Tahoma, sans-serif; overflow: scroll; }
 .form-row td:nth-child(2) { text-align: left; }
 #feed-details { border: 1px solid; width: 100%; }
 #podcastPlayer { width: 100%; }
+
+@media screen and (max-width: 768px) {
+    .left-panel, .right-panel { display: block; width: 100%; }
+}
+
+@media screen and (min-width: 768px) {
+    .left-panel { width: 40%; } .right-panel { width: 60%; }
+}
 
 /***** BEGIN dark mode *****/
 /***** https://ar.al/2021/08/24/implementing-dark-mode-in-a-handful-of-lines-of-css-with-css-filters/ *****/
