@@ -4,7 +4,7 @@ import hashlib
 import os
 import os.path
 import pytz
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from babel.dates import format_timedelta
 
@@ -114,7 +114,7 @@ class Feed(db.Model):
             url = strip_protocol(e['url'])
             if url.startswith(feed_domain):
                 urls.add(url)
-        common_prefix = os.path.commonprefix(list(urls))
+        common_prefix = os.path.commonprefix(list(urls)).strip('#?')
         self.homepage_url = f'http://{common_prefix}'
         self.title = parsed_feed['title']
         self.updated_at = parsed_feed['updated_at']
@@ -190,10 +190,13 @@ class Feed(db.Model):
         new_items = []
         updated_items = []
         for e in parsed_feed['items']:
-            item = Item.query.filter_by(url=e['url']).first()
+            item_url = e['url']
+            if item_url.startswith('/'):
+                item_url = urljoin(self.homepage_url, item_url)
+            item = Item.query.filter_by(url=item_url).first()
             if not item:
-                if e['url'] not in new_item_urls:
-                    item = Item(feed_id=self.id, url=e['url'], title=e['title'],
+                if item_url not in new_item_urls:
+                    item = Item(feed_id=self.id, url=item_url, title=e['title'],
                         content_from_feed=e['content'],
                         updated_at=e['updated_at'])
                     if e['enclosure']:
@@ -205,7 +208,7 @@ class Feed(db.Model):
                             item.enclosure_length = 0
                         self.is_podcast = True
                     new_items.append(item)
-                    new_item_urls.add(e['url'])
+                    new_item_urls.add(item_url)
             elif item.title != e['title'] or item.updated_at != e['updated_at']:
                 item.title = e['title']
                 item.content_from_feed = e['content']
