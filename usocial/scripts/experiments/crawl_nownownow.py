@@ -4,9 +4,10 @@ import requests
 import sys
 from urllib.parse import urlparse
 
+from feedparsley import parse_feed, extract_feed_links
+
 from usocial import models
 from usocial.main import db
-from usocial.parser import parse_feed, extract_feed_links
 
 import config
 

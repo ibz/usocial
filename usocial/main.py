@@ -95,7 +95,7 @@ def create_user(username):
 @app.cli.command("fetch-feeds")
 @with_appcontext
 def fetch_feeds():
-    from usocial.parser import parse_feed
+    from feedparsley import parse_feed
     for feed_id, in list(m.Feed.query.with_entities(m.Feed.id).all()):
         try:
             feed = m.Feed.query.get(feed_id)

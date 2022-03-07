@@ -8,10 +8,10 @@ import requests
 from sqlalchemy import func
 from urllib.parse import urlparse
 
+from feedparsley import extract_feed_links, parse_feed
 import podcastindex
 
 from usocial import forms, models as m, payments
-from usocial.parser import extract_feed_links, parse_feed
 from usocial.main import app, db, jwt_required
 
 import config

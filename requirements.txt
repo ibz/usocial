@@ -1,6 +1,6 @@
 babel
 bs4
-feedparser
+feedparsley
 Flask
 Flask-Bcrypt
 Flask-Cors
@@ -9,7 +9,6 @@ Flask-Migrate
 Flask-WTF
 lnd-grpc-client
 pytest
-python-dateutil
 python-podcastindex
 requests
 wheel

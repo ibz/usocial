@@ -9,9 +9,11 @@ from urllib.parse import urljoin, urlparse
 from babel.dates import format_timedelta
 
 from usocial.main import app, db, bcrypt
-from usocial.parser import strip_protocol
 
 import config
+
+def strip_protocol(url):
+    return url.replace('http://', '').replace('https://', '')
 
 class User(db.Model):
     __tablename__ = 'users'
