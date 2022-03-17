@@ -204,7 +204,7 @@ class Feed(db.Model):
             item_url = e['url']
             if item_url.startswith('/'):
                 item_url = urljoin(self.homepage_url, item_url)
-            item = db.session.query(Item).filter_by(url=item_url).first()
+            item = db.session.query(Item).filter_by(feed_id=self.id, url=item_url).first()
             if not item:
                 if item_url not in new_item_urls:
                     item = Item(feed_id=self.id, url=item_url, title=e['title'],
