@@ -12,8 +12,9 @@ from flask_jwt_extended import create_access_token, JWTManager, set_access_cooki
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
 from flask_wtf.csrf import CSRFProtect
+import podcastindex
+from sqlalchemy.exc import IntegrityError
 
 from logging.config import dictConfig
 
@@ -63,6 +64,10 @@ from usocial import models as m
 
 migrate = Migrate(app, db)
 
+def get_podcastindex():
+    import config
+    return podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
+
 @app.template_filter('autoversion')
 def autoversion_filter(filename):
     fullpath = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename[1:])
@@ -100,19 +105,29 @@ def fetch_feeds():
         try:
             feed = m.Feed.query.get(feed_id)
             parsed_feed = parse_feed(feed.url)
-            feed.update(parsed_feed)
-            new_items_count = 0
-            users_count = 0
-            if parsed_feed:
+
+            feed.fetched_at = datetime.utcnow()
+            if not parsed_feed:
+                feed.fetch_failed = True
+            else:
+                feed.fetch_failed = False
+                new_items_count = 0
+                users_count = 0
                 new_items, updated_items = feed.update_items(parsed_feed)
                 for item in new_items + updated_items:
                     db.session.add(item)
+                value_from_index = None
                 if new_items:
                     new_items_count = len(new_items)
                     for user in m.User.query.join(m.Group).join(m.FeedGroup).join(m.Feed).filter(m.FeedGroup.feed == feed):
                         users_count += 1
                         for item in new_items:
                             db.session.add(m.UserItem(user=user, item=item))
+                    if feed.is_podcast:
+                        feed_from_index = get_podcastindex().podcastByFeedUrl(feed.url)
+                        value_from_index = feed_from_index.get('feed', {}).get('value') if feed_from_index else None
+                        feed.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'], value_from_index)
+                feed.update(parsed_feed)
             db.session.add(feed)
             db.session.commit()
             app.logger.info(f"Feed fetched: {feed.url}. New items: {new_items_count}. Affected users: {users_count}.")

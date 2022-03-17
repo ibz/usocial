@@ -9,10 +9,9 @@ from sqlalchemy import func
 from urllib.parse import urlparse
 
 from feedparsley import extract_feed_links, parse_feed
-import podcastindex
 
 from usocial import forms, models as m, payments
-from usocial.main import app, db, jwt_required
+from usocial.main import app, db, get_podcastindex, jwt_required
 
 import config
 
@@ -180,8 +179,7 @@ def search_podcasts():
 
     q = m.Feed.query.join(m.FeedGroup).join(m.Group).filter(m.Group.user == current_user).all()
     subscribed_urls = {f.url for f in q}
-    index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
-    result = index.search(request.form['keywords'])
+    result = get_podcastindex().search(request.form['keywords'])
     feeds = [{'id': f['id'],
               'url': f['url'],
               'title': f['title'],
@@ -211,10 +209,10 @@ def follow_podcast():
     parsed_feed = parse_feed(feed.url)
     if not parsed_feed:
         return jsonify(ok=False)
-    index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
-    feed_from_index = index.podcastByFeedUrl(feed_url)
+    feed_from_index = get_podcastindex().podcastByFeedUrl(feed_url)
     value_from_index = feed_from_index.get('feed', {}).get('value') if feed_from_index else None
-    feed.update(parsed_feed, value_from_index)
+    feed.update(parsed_feed)
+    feed.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'], value_from_index)
     db.session.add(feed)
     db.session.commit()
     new_items, updated_items = feed.update_items(parsed_feed)
