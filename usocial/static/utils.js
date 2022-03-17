@@ -286,7 +286,8 @@ function feedClick(e, feedId, liked) {
         return;
     }
 
-    window.location = `/feeds/${feedId}/items` + (liked ? '/liked' : '') + "#items";
+    var anchor = parseInt(feedId) ? "#feed-title" : "#items";
+    window.location = `/feeds/${feedId}/items` + (liked ? '/liked' : '') + anchor;
 }
 
 function showStreamPayment() {
