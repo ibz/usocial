@@ -204,12 +204,13 @@ class Feed(db.Model):
             item_url = e['url']
             if item_url.startswith('/'):
                 item_url = urljoin(self.homepage_url, item_url)
-            item = Item.query.filter_by(url=item_url).first()
+            item = db.session.query(Item).filter_by(url=item_url).first()
             if not item:
                 if item_url not in new_item_urls:
                     item = Item(feed_id=self.id, url=item_url, title=e['title'],
                         content_from_feed=e['content'],
                         updated_at=e['updated_at'])
+                    db.session.add(item)
                     if e['enclosure']:
                         item.enclosure_url = e['enclosure']['href']
                         item.enclosure_type = e['enclosure']['type']

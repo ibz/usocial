@@ -140,15 +140,13 @@ def add_website():
         if not parsed_feed:
             flash(f"Cannot parse feed at: {feed_url}")
             return redirect(url_for('feed.add_website'))
-        existing_feed = m.Feed.query.filter_by(url=feed_url).one_or_none()
-        feed = existing_feed or m.Feed(url=feed_url)
+        feed = db.session.query(m.Feed).filter_by(url=feed_url).one_or_none()
+        if not feed:
+            feed = m.Feed(url=feed_url)
+            db.session.add(feed)
         feed.update(parsed_feed)
-        db.session.add(feed)
         db.session.commit()
         new_items, updated_items = feed.update_items(parsed_feed)
-        db.session.add(feed)
-        for item in new_items + updated_items:
-            db.session.add(item)
         db.session.commit()
         group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.DEFAULT_GROUP).one_or_none()
         if not group:
@@ -199,7 +197,7 @@ def search_podcasts():
 @jwt_required
 def follow_podcast():
     feed_url = request.form['url']
-    feed = m.Feed.query.filter_by(url=feed_url).one_or_none()
+    feed = db.session.query(m.Feed).filter_by(url=feed_url).one_or_none()
     if not feed:
         feed = m.Feed(
             url=request.form['url'],
@@ -213,12 +211,8 @@ def follow_podcast():
     value_from_index = feed_from_index.get('feed', {}).get('value') if feed_from_index else None
     feed.update(parsed_feed)
     feed.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'], value_from_index)
-    db.session.add(feed)
     db.session.commit()
     new_items, updated_items = feed.update_items(parsed_feed)
-    db.session.add(feed)
-    for item in new_items + updated_items:
-        db.session.add(item)
     db.session.commit()
     group = m.Group.query.filter(m.Group.user == current_user, m.Group.name == m.Group.DEFAULT_GROUP).one_or_none()
     if not group:

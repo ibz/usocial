@@ -103,7 +103,7 @@ def fetch_feeds():
     from feedparsley import parse_feed
     for feed_id, in list(m.Feed.query.with_entities(m.Feed.id).all()):
         try:
-            feed = m.Feed.query.get(feed_id)
+            feed = db.session.query(m.Feed).get(feed_id)
             parsed_feed = parse_feed(feed.url)
 
             feed.fetched_at = datetime.utcnow()
@@ -114,8 +114,6 @@ def fetch_feeds():
                 new_items_count = 0
                 users_count = 0
                 new_items, updated_items = feed.update_items(parsed_feed)
-                for item in new_items + updated_items:
-                    db.session.add(item)
                 value_from_index = None
                 if new_items:
                     new_items_count = len(new_items)
@@ -128,7 +126,6 @@ def fetch_feeds():
                         value_from_index = feed_from_index.get('feed', {}).get('value') if feed_from_index else None
                         feed.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'], value_from_index)
                 feed.update(parsed_feed)
-            db.session.add(feed)
             db.session.commit()
             app.logger.info(f"Feed fetched: {feed.url}. New items: {new_items_count}. Affected users: {users_count}.")
         except Exception as e:
