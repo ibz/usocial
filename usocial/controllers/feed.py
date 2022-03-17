@@ -200,7 +200,8 @@ def search_podcasts():
 @feed_blueprint.route('/feeds/podcasts/follow', methods=['POST'])
 @jwt_required
 def follow_podcast():
-    feed = m.Feed.query.filter_by(url=request.form['url']).one_or_none()
+    feed_url = request.form['url']
+    feed = m.Feed.query.filter_by(url=feed_url).one_or_none()
     if not feed:
         feed = m.Feed(
             url=request.form['url'],
@@ -210,7 +211,10 @@ def follow_podcast():
     parsed_feed = parse_feed(feed.url)
     if not parsed_feed:
         return jsonify(ok=False)
-    feed.update(parsed_feed)
+    index = podcastindex.init({'api_key': config.PODCASTINDEX_API_KEY, 'api_secret': config.PODCASTINDEX_API_SECRET})
+    feed_from_index = index.podcastByFeedUrl(feed_url)
+    value_from_index = feed_from_index.get('feed', {}).get('value') if feed_from_index else None
+    feed.update(parsed_feed, value_from_index)
     db.session.add(feed)
     db.session.commit()
     new_items, updated_items = feed.update_items(parsed_feed)

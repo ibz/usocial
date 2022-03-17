@@ -104,7 +104,7 @@ class Feed(db.Model):
         assert len(value_specs) in (0, 1)
         return value_specs[0] if value_specs else None
 
-    def update(self, parsed_feed):
+    def update(self, parsed_feed, value_from_index=None):
         self.fetched_at = datetime.utcnow()
         if not parsed_feed:
             self.fetch_failed = True
@@ -122,10 +122,26 @@ class Feed(db.Model):
         self.updated_at = parsed_feed['updated_at']
         self.parser = parsed_feed['parser']
 
-        self.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'])
+        self.update_value_spec(parsed_feed['value_spec'], parsed_feed['value_recipients'], value_from_index)
 
-    def update_value_spec(self, p_value_spec, p_value_recipients):
+    def update_value_spec(self, p_value_spec, p_value_recipients, value_from_index):
         value_spec = self.value_spec
+
+        # NB: the value spec coming from podcastindex.org now always overrides the one from the feed
+        # is this good? bad? TODO: maybe we should just check whether they differ?
+        if value_from_index.get('model'):
+            p_value_spec = {'protocol': value_from_index['model']['type'],
+                            'method': value_from_index['model']['method'],
+                            'suggested_amount': float(value_from_index['model'].get('suggested', 0))}
+        if value_from_index.get('destinations'):
+            p_value_recipients = [
+                {'name': d.get('name'),
+                'address_type': d['type'],
+                'address': d['address'],
+                'custom_key': d.get('customKey'),
+                'custom_value': d.get('customValue'),
+                'split': d['split']}
+                for d in value_from_index['destinations']]
 
         if not p_value_spec:
             if value_spec:
