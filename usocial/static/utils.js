@@ -286,7 +286,8 @@ function feedClick(e, feedId, liked) {
         return;
     }
 
-    var anchor = parseInt(feedId) ? "#feed-title" : "#items";
+    var smallScreen = window.innerWidth < 768;
+    var anchor = smallScreen ? "#feed-title" : "";
     window.location = `/feeds/${feedId}/items` + (liked ? '/liked' : '') + anchor;
 }
 
