@@ -238,11 +238,14 @@ class FeedGroup(db.Model):
 
 class Item(db.Model):
     __tablename__ = 'items'
+    __table_args__ = (
+        db.UniqueConstraint('feed_id', 'url', name='uq_items_feed_id'),
+    )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     feed_id = db.Column(db.Integer, db.ForeignKey(Feed.id))
     feed = db.relationship(Feed, back_populates='items')
-    url = db.Column(db.String(1000), unique=True, nullable=False)
+    url = db.Column(db.String(1000), nullable=False)
     title = db.Column(db.String(1000))
     content_from_feed = db.deferred(db.Column(db.String(10000)))
     enclosure_url = db.Column(db.String(1000))
