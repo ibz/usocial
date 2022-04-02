@@ -33,7 +33,7 @@
     {% if counts[feed.id] %}
         <tr class="main-row feed-row {% if feed.active %}feed-active {% endif %}"
             onclick="feedClick(event, {{ feed.id }}, {% if liked %}true{% else %}false{% endif %}); return false;"
-            title="fetched at {{ feed.fetched_at.strftime('%-d %b %-H:%M') }}">
+            title="{% if feed.fetched_at %}fetched at {{ feed.fetched_at.strftime('%-d %b %-H:%M') }}{% endif %}">
             <td id="feed-{{ feed.id }}" class="feed-actions feed-followed-1">
                 <span class="unfollow-link">
                     <span onclick="followFeed({{ feed.id }}, 0); return false;" href=""><i title="unfollow" class="far fa-eye"></i></span>
