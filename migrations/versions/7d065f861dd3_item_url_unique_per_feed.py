@@ -1,4 +1,4 @@
-"""empty message
+"""Item URL unique per feed, not globally.
 
 Revision ID: 7d065f861dd3
 Revises: 01f04eb3cb6d
