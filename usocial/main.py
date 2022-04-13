@@ -1,6 +1,7 @@
 from datetime import datetime
 from functools import wraps
 import os
+import signal
 import sys
 
 import click
@@ -100,6 +101,7 @@ def create_user(username):
 @app.cli.command("fetch-feeds")
 @with_appcontext
 def fetch_feeds():
+    signal.signal(signal.SIGTERM, lambda _, __: sys.exit(0))
     from feedparsley import parse_feed
     for feed_id, in list(m.Feed.query.with_entities(m.Feed.id).all()):
         try:
@@ -170,4 +172,5 @@ jwt_required = jwt_required_wrapper(False)
 refresh_jwt_required = jwt_required_wrapper(True)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, lambda _, __: sys.exit(0))
     app.run(host='0.0.0.0', port=5000)
