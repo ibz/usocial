@@ -1,12 +1,34 @@
-Read more at [usocial.me](http://usocial.me).
+# This project has been discontinued
 
-## Running usocial
+## usocial (2018 - 2022)
 
-The recommended way to run **usocial** on [Umbrel](https://github.com/getumbrel/umbrel) and [Citadel](https://github.com/runcitadel) is to install it from the respective dashboard.
+Most open source projects are simply forgotten and die a slow and lonely death.
 
-If you want to run **usocial** on your laptop, home server or VPS, [check the instructions here](https://usocial.me/running).
+**usocial** was different. Same same, but different.
 
-If you want to debug or edit the code, keep reading.
+It started as a personal RSS feed reader, evolved into a Podcasting 2.0 client, got released on Umbrel OS...
+
+You could run usocial on your own Umbrel personal server, follow your favourite blogs, subscribe to your favourite podcasts...
+
+**usocial** would connect to your own Lightning node and, while listening to a podcast episode, you could send sats directly to the podcaster. The payment would even automatically be split, according to the podcaster's desire, and go to different recipients.
+
+It had a terrible UI, but it worked beautifully. It was my way of keeping up to date with podcasts and blogs and tipping creators.
+
+Then, something happened.
+
+**usocial** didn't die, it just evolved into something else: **[Servus](https://github.com/servuscms/servus)** (2022-).
+
+I realized that more important than following blogs and podcasts is publishing your own content. Only *after* there is a solid way for anyone to self-host their web site and **publish** content will there be a need for a self-hosted way to **subscribe** to content.
+
+I used to be a fan of Jekyll, but I realized that it is not for the mere mortals to use. I hated WP, which I had used since 2005 or so. WP was more user-friendly than Jekyll and other SSGes, but it just did not click with me.
+
+I had written a few CMSes before (2008-2012), mostly trying to host my photoblog in a pre-Flickr era and to build a sort-of online travel log. See [nuages](https://github.com/ibz/nuages), [tzadik](https://github.com/ibz/tzadik), [feather](https://github.com/ibz/feather) and [travelist](https://github.com/ibz/travelist).
+
+Then it all clicked. The missing piece was a CMS. I could take a lot of ideas from Jekyll, while trying to keep the usability of WP.
+
+That is how [Servus](https://github.com/servuscms/servus) was born and that was the end of usocial.
+
+It didn't die, it just evolved.
 
 ## Setting up the development environment
 
